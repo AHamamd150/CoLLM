@@ -1,0 +1,12 @@
+Generate a complete Python analysis script for Delphes ROOT files based on the following specifications:
+
+## SELECTION CUTS
+{selection_cuts}
+
+## PLOTS FOR VALIDATION
+{plots_for_validation}
+
+## OUTPUT STRUCTURE
+{output_structure}
+
+## Output Code:

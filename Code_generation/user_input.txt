@@ -1,0 +1,11 @@
+[SELECTION_CUTS]s
+- Electrons: PT > 20 GeV, |Eta| < 2.4
+- Require exactly 2 electrons with opposit  charge
+
+[PLOTS_FOR_VALIDATION]
+- Dielectron invariant mass
+
+[OUTPUT_STRUCTURE]
+- Save plots as PNG (150 dpi)
+- Print cut flow: total events → after electron selection
+
