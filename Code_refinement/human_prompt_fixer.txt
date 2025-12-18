@@ -1,0 +1,16 @@
+Fix the following Python code based on the terminal error and error report. Return ONLY the complete, corrected, executable code.
+
+## ORIGINAL CODE
+```python
+{original_code}
+```
+
+## TERMINAL ERROR
+```
+{terminal_error}
+```
+
+## ERROR REPORT
+{error_report}
+
+## Output Code:
