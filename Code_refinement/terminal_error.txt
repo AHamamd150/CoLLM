@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "/data1/hammad/collm/collm_1/generated_analysis.py", line 65, in <module>
-    main(sys.argv[1])
-  File "/data1/hammad/collm/collm_1/generated_analysis.py", line 35, in main
-    obj_mask = (pt > PT_CUT) & (np.abs(eta) < ETA_CUT)
-NameError: name 'PT_CUT' is not defined
