@@ -1,0 +1,16 @@
+[SELECTION_CUTS]
+- Electrons: PT > 20 GeV, |Eta| < 2.4
+- Require exactly 2 electrons
+- Opposite-sign electrons pair
+- Leading electron PT > 25 GeV
+
+[PLOTS_FOR_VALIDATION]
+- Dielectron invariant mass: 60 bins, range 60–120 GeV (Z peak region)
+- Leading electron PT: 50 bins, range 0–150 GeV
+- Subleading electron PT: 50 bins, range 0–100 GeV
+- Electron Eta: 50 bins, range -2.5 to 2.5
+
+[OUTPUT_STRUCTURE]
+- Save plots as PNG (150 dpi)
+- Print cut flow: total events → after electron selection
+- Print number of events in Z mass window (80–100 GeV)
