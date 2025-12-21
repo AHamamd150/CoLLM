@@ -1,5 +1,7 @@
 <div align="center">
-# 🔬 CoLLM: An automated, graphical user interface, end-to-end deep learning toolbox for collider analysis 
+  
+  # 🔬 CoLLM: An automated, graphical user interface, end-to-end deep learning toolbox for collider analysis 
+  
 <img src="logo.png" alt="CoLLM Logo" width="70"/>   
 
 
