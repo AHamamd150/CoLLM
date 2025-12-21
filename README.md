@@ -133,14 +133,63 @@ Plus standard library: `sys`, `json`, `pathlib`, `typing`
 ## ⚙️ How the Workflow Works
 
 ```mermaid
-graph LR
-    A[📄 user_input.txt] --> B[🎛️ collm.py]
-    B --> C{LLM Generation}
-    C --> D[🛡️ Validation Gate]
-    D -->|❌ Fail| E[🔄 Repair Loop]
-    E --> C
-    D -->|✅ Pass| F[🎯 generated_analysis.py]
-    F --> G[📊 Run on ROOT files]
+flowchart LR
+    subgraph Inputs[" "]
+        direction TB
+        ROOT[Input ROOT files]
+        XS1[Input cross section]
+        UI[User input]
+        PT[Prompt tuning]
+        LLM[LLM\nHuggingFace]
+    end
+
+    subgraph Core[" "]
+        ORCH[Orchestrator\nLangChain / collm.py]
+        GEN[Generated\nPython code]
+        DEBUG[Code\ndebugging]
+        VAL{Validation}
+        FIX[LLM code\nfixing]
+    end
+
+    subgraph MLLoop[Optional ML Loop]
+        PREP[Prepare ML\ninputs]
+        TRAIN[ML training]
+        METRICS[Output\nmetrics]
+        OPT[Optimize cuts\non network output]
+    end
+
+    FINAL[Final results]
+
+    ROOT --> ORCH
+    XS1 --> ORCH
+    UI --> ORCH
+    PT --> ORCH
+    LLM --> ORCH
+
+    ORCH --> GEN --> DEBUG --> VAL
+    DEBUG -->|Error| FIX --> DEBUG
+    VAL -->|Not valid / Regenerate| ORCH
+    VAL -->|Valid| PREP
+    PREP --> TRAIN --> METRICS --> OPT --> ORCH
+
+    XS1 --> FINAL
+    VAL -->|Valid| FINAL
+
+    style ROOT fill:#d3d3d3,stroke:#333
+    style XS1 fill:#d3d3d3,stroke:#333
+    style UI fill:#d3d3d3,stroke:#333
+    style PT fill:#d3d3d3,stroke:#333
+    style LLM fill:#d3d3d3,stroke:#333
+    style ORCH fill:#2b6a8a,stroke:#333,color:#fff
+    style GEN fill:#2b6a8a,stroke:#333,color:#fff
+    style DEBUG fill:#2b6a8a,stroke:#333,color:#fff
+    style VAL fill:#5ba3c6,stroke:#333,color:#fff
+    style FIX fill:#f5c78e,stroke:#333
+    style PREP fill:#2b6a8a,stroke:#333,color:#fff
+    style TRAIN fill:#2b6a8a,stroke:#333,color:#fff
+    style METRICS fill:#2b6a8a,stroke:#333,color:#fff
+    style OPT fill:#2b6a8a,stroke:#333,color:#fff
+    style FINAL fill:#6ab187,stroke:#333,color:#fff
 ```
 
 ### 1️⃣ Inputs
@@ -240,8 +289,5 @@ The architecture is designed for extensibility:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
----
-
-Made with ❤️ for the HEP community
 
 </div>
