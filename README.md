@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🔬 texttt{CoLLM}: An automated, graphical user interface, end-to-end deep learning toolbox for collider analyse
+# 🔬 CoLLM: An automated, graphical user interface, end-to-end deep learning toolbox for collider analyse \\
 
 ### *LLM-Powered Physics Analysis Automation with deep learning*
 
