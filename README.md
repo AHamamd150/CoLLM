@@ -25,7 +25,7 @@
 
 ---
 
-## ✨ What is This?
+## ✨  CoLLM in nutshell?
 
 This project automates the creation of **executable Python analysis scripts** for **Delphes ROOT** outputs (`TTree "Delphes"`). Simply describe your physics cuts, validation plots, and desired output structure — and let the LLM do the heavy lifting.
 
