@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🔬 CoLLM: An automated, graphical user interface, end-to-end deep learning toolbox for collider analyse 
+<img src="logo.png" alt="CoLLM Logo" width="200"/>
+
+# 🔬 CoLLM: An automated, graphical user interface, end-to-end deep learning toolbox for collider analysis 
 
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
