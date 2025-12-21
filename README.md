@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🔬 Delphes Analysis Code Generator
+# 🔬 texttt{CoLLM}: An automated, graphical user interface, end-to-end deep learning toolbox for collider analyse
 
-### *LLM-Powered Physics Analysis Automation with Deterministic Validation*
+### *LLM-Powered Physics Analysis Automation with deep learning*
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -10,7 +10,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
 <p align="center">
-  <img src="workflow.jpg" alt="Workflow Overview" width="700"/>
+  <img src="workflow.jpg" alt="Workflow Overview" width="1000"/>
 </p>
 
 *Generate production-ready, single-file Python analysis scripts for Delphes ROOT outputs — no boilerplate, no headaches.*
@@ -234,43 +234,6 @@ A concrete, validated `generated_analysis.py` ready for production use.
 
 ---
 
-## 🔧 Troubleshooting
-
-<details>
-<summary><b>❌ "Syntax error at line 1"</b></summary>
-
-**Cause:** Model returned non-code content or malformed header.
-
-**Solutions:**
-- Increase `--max_new_token` for complete script generation
-- Use `--use_generate` for instruct models
-
-</details>
-
-<details>
-<summary><b>❌ "Unresolved template placeholders found: {branch}, {candidate}"</b></summary>
-
-**Cause:** Model emitted template placeholders instead of concrete identifiers.
-
-**Solutions:**
-- Strengthen the system prompt ban on placeholders
-- Add `"NEVER use {...} outside f-strings"` to human prompt
-- Enable retry/repair loop (built into `collm.py`)
-
-</details>
-
-<details>
-<summary><b>❌ "Missing required plot save call: *.savefig(...)"</b></summary>
-
-**Cause:** Plots were requested but not saved.
-
-**Solutions:**
-- Make requirements explicit in `PLOTS_FOR_VALIDATION`
-- Ensure prompts include `"must call plt.savefig(..., dpi=150) and plt.close()"`
-
-</details>
-
----
 
 ## 🗺️ Roadmap
 
