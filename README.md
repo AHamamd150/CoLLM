@@ -77,7 +77,8 @@ Edit `user_input.txt` with three required sections:
 ### Step 2: Generate the Script
 
 ```bash
-ipython collm.py -- --use_generate --quant 4bit --max_new_token 4096
+chmod 777 run.sh
+./run.sh --run_TUI --input user_input_TUI.yml
 ```
 
 ### Step 3: Run Your Analysis
