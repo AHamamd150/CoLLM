@@ -1,0 +1,37 @@
+# Physics Process: p p > Z Z Z, Z > ta- ta+, Z > b b~, Z > l- l+
+# ==============================================================
+
+[SELECTION_CUTS]
+- Select electrons with pT > 10 GeV and |eta| < 2.5
+- Select muons with pT > 10 GeV and |eta| < 2.4
+- Requires at least two leptons
+- Requires at least two taus  
+- Requires at least two b  jets
+- Select invariant mass of the leading and second leading leptons between 10 and 300
+- Select angular separation between the leading tau and second leading b jet > 0.1 
+
+[PLOTS_FOR_VALIDATION]
+- Plot the following with all plots are histograms:
+1 Plot the leading electron and subleading muon pT superimposed. Use different opacity for better visualization.
+2 Plot the missing energy distribution
+3 Plot the transverse momentum of the leading b jet
+4 Plot the eta of b jets
+5 plot the invariant mass of the leading and subleading  taus
+6 Plot the pT of the b jets
+7 Plot invariant mass of the leading and subleading b jets in the mass range between 10 and 150
+8 Plot invariant mass of the leading and subleading lepton in the mass range between 10 and 150
+9 Plot delta R between leading electron and subleading b jet
+10 delta eta between the leading and subleading b jets
+
+- Each histogram is required to have 50 bins.
+- Write the title of the figures in symbols or LaTeX if applicable.
+- Normalize all the histograms to one.
+
+
+[OUTPUT_STRUCTURE]
+- print summary statistics and print the number of events before and after the selection cuts
+- save the following  in a single  csv file for MLP analysis:
+  1- pt of the leading letpton
+  2- pt of the leading tau leptons
+  3- delta R between the leading lepton and leading tau
+  4- delta eta between the leading and subleading b jets
