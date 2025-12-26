@@ -100,7 +100,8 @@ Your script will:
 
 <details>
 <summary><b>🔧 Generator Dependencies</b> (this repo)</summary>
-
+At the start of the package it ensures all needed dependencies are installed. If some of them is not installed it will be automatically installed via pip command.
+The user is not required to install anything by himself. 
 ```
 transformers
 torch
