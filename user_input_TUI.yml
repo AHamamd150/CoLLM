@@ -8,4 +8,4 @@ MAX_RETRIES : 3
 Input_file : "/Users/hammad/work/CoLLM/data/signal_1.lhco"
 User_input : "/Users/hammad/work/CoLLM/templates/user_input_1.txt" # user input to generate the analysis code
 Use_api : True
-Api_key: "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"
+Api_key: "Enter you HuggingFace API key here"
