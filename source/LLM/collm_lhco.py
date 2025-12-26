@@ -52,7 +52,7 @@ ensure_packages()
 # Imports (after install)
 # =========================
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig  
 
 # =========================
 # Configuration
@@ -187,18 +187,33 @@ def load_model_and_tokenizer(model_id: str):
     device, dtype = get_device_and_dtype()
     print(f"Using device: {device}")
     
-    if device == "mps":
-        # MPS doesn't work well with device_map="auto"
+    if device == "cuda":
+        # CUDA supports 4-bit quantization with BitsAndBytes
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4"
+        )
+        
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
-            torch_dtype=dtype,
+            quantization_config=quantization_config,
+            device_map="auto",
+            trust_remote_code=True,
+        )
+    elif device == "mps":
+        # MPS: Use float16 and CPU offloading for large models
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            torch_dtype=torch.float16,
             low_cpu_mem_usage=True,
             trust_remote_code=True,
         ).to(device)
     else:
+        # CPU fallback
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
-            device_map="auto",
             torch_dtype=dtype,
             low_cpu_mem_usage=True,
             trust_remote_code=True,

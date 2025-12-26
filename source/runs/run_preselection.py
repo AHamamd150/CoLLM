@@ -7,8 +7,12 @@ import sys
 from pathlib import Path
 import os
 import shutil
+import warnings
+warnings.filterwarnings("ignore", message="To copy construct from a tensor")
 ##=============================##
 ##=============================##
+
+
 
 if len(sys.argv) > 1:
     config_path = sys.argv[1]

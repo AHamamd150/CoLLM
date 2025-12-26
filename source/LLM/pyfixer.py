@@ -10,7 +10,7 @@ Usage:
 import re
 import ast
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig  
 
 DEFAULT_MODEL = "Qwen/Qwen2.5-Coder-14B-Instruct"
 
@@ -66,22 +66,39 @@ def _load_model(model_id: str = DEFAULT_MODEL):
         print(f"Using device: {_device}")
         _tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
         
-        if _device == "mps":
-            # MPS doesn't work well with device_map="auto"
+        if _device == "cuda":
+            # CUDA supports 4-bit quantization with BitsAndBytes
+            from transformers import BitsAndBytesConfig
+            
+            quantization_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_quant_type="nf4"
+            )
+            
+            _model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                quantization_config=quantization_config,
+                device_map="auto",
+                trust_remote_code=True,
+            )
+        elif _device == "mps":
+            # MPS: Use float16 for faster inference
             _model = AutoModelForCausalLM.from_pretrained(
                 model_id,
                 trust_remote_code=True,
-                torch_dtype=dtype,
+                torch_dtype=torch.float16,
             ).to(_device)
         else:
+            # CPU fallback
             _model = AutoModelForCausalLM.from_pretrained(
                 model_id,
                 trust_remote_code=True,
                 torch_dtype=dtype,
-                device_map="auto" if _device == "cuda" else None
             )
+    
     return _model, _tokenizer, _device
-
 
 def _extract_code(response: str) -> str:
     match = re.search(r'```python\s*(.*?)\s*```', response, re.DOTALL)
