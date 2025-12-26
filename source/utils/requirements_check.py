@@ -9,14 +9,56 @@ logger = logging.getLogger(__name__)
 #==============================
 # Core packages always required
 #==============================
+def _ensure_compatible_numpy():
+    """Check NumPy version and downgrade if 2.x is installed.
+    
+    NumPy 2.x has breaking changes that cause compatibility issues with
+    packages compiled against NumPy 1.x (like PyTorch and transformers).
+    """
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", "import numpy; print(numpy.__version__)"],
+            capture_output=True, text=True, timeout=30
+        )
+        if result.returncode == 0:
+            version = result.stdout.strip()
+            major_version = int(version.split(".")[0])
+            
+            if major_version >= 2:
+                logger.warning(f"NumPy {version} detected. Downgrading to NumPy<2 for compatibility...")
+                try:
+                    subprocess.check_call([
+                        sys.executable, "-m", "pip", "install", "numpy<2",
+                        "--force-reinstall", "--quiet"
+                    ], stdout=subprocess.DEVNULL)
+                    logger.info("Successfully downgraded NumPy")
+                    logger.warning("=" * 50)
+                    logger.warning("NumPy was downgraded. Please RESTART Python!")
+                    logger.warning(" Run your script again after restarting.")
+                    logger.warning("=" * 50)
+                    sys.exit(0)
+                except subprocess.CalledProcessError as e:
+                    logger.error(f"Failed to downgrade NumPy: {e}")
+                    raise
+    except FileNotFoundError:
+        pass  # NumPy not installed yet, will be installed later
+    except Exception:
+        pass  # Ignore other errors, numpy check in packages dict will handle it
+
+
 def ensure_packages():
     """Install required packages if not already installed."""
     import sys
     import subprocess
     
+    # First, check if NumPy 2.x is installed and downgrade if needed
+    # This must happen before importing packages that depend on NumPy
+    _ensure_compatible_numpy()
+    
     packages = {
         # Core dependencies
-        "numpy":                 "numpy",
+        # Pin numpy<2 for compatibility with PyTorch/transformers compiled against NumPy 1.x
+        "numpy":                 "numpy<2",
         "matplotlib":            "matplotlib",
         "tqdm":                  "tqdm",
         "yaml":                  "pyyaml",
