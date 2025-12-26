@@ -9,11 +9,6 @@ import os
 import shutil
 ##=============================##
 ##=============================##
-
-if len(sys.argv) > 1:
-    config_path = sys.argv[1]
-    
-output_dir, DEFAULT_MODEL,MAX_RETRIES,input_test,input_user = read_conf(config_path)
 ''' 
 This is the main code that runs the LLM analysis to generate the analysis code.
 
@@ -32,11 +27,10 @@ llama/CodeLlama-13b-Instruct-hf                   13B     ~18GB    ⭐⭐⭐    
 ##=============================
 # Configs 
 ##=============================
-#output_dir = "/data1/hammad/CoLLM/output/"
-#DEFAULT_MODEL = "Qwen/Qwen2.5-Coder-7B-Instruct"
-#MAX_RETRIES = 3
-#input_test = "/data1/hammad/collm/collm_lhco/signal_1.lhco"
-#input_user = "/data1/hammad/CoLLM/templates/user_input_2.txt"
+if len(sys.argv) > 1:
+    config_path = sys.argv[1]
+    
+output_dir, DEFAULT_MODEL,MAX_RETRIES,input_test,input_user = read_conf(config_path)
 output_code = output_dir+"generated_lhco_analysis.py"
 
 def recreate_dir(path):
@@ -68,9 +62,9 @@ ensure_packages()
 
 def run_LLM(output_dir: str,DEFAULT_MODEL: str, input_test: str,input_user: str, output_code:str,MAX_RETRIES: int ):
     
-    ##=======================================================================
+   ##=======================================================================
    # suppress the plt.show() if exist in the generated code
-    ##=======================================================================
+   ##=======================================================================
    env = os.environ.copy()
    env['MPLBACKEND'] = 'Agg'
     ##================================
