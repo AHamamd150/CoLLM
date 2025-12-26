@@ -2,7 +2,7 @@
   
   #  CoLLM: An automated, graphical user interface, end-to-end deep learning toolbox for collider analysis 
   
-<img src="logo.png" alt="CoLLM Logo" width="170"/>   
+<img src="logo/logo.png" alt="CoLLM Logo" width="170"/>   
 
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
@@ -11,7 +11,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
 <p align="center">
-  <img src="workflow.jpg" alt="Workflow Overview" width="1000"/>
+  <img src="logo/workflow.jpg" alt="Workflow Overview" width="1000"/>
 </p>
 
 *Generate production-ready, single-file Python analysis scripts for Delphes ROOT outputs — no boilerplate, no headaches.*
