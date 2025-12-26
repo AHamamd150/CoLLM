@@ -11,8 +11,12 @@ def read_conf(file_):
     MAX_RETRIES = data["MAX_RETRIES"]
     input_test  = data["Input_file"]
     user_input = data["User_input"]
+    api = data["Use_api"]
+    api_key = data["Api_key"]
     return (output_dir,
               DEFAULT_MODEL,
               MAX_RETRIES,
               input_test,
-              user_input)
+              user_input,
+              api,
+              api_key)

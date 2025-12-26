@@ -129,6 +129,10 @@ BEST PRACTICES:
 - Validate particle counts before pairing or selection
 - Handle edge cases: missing objects, empty events, malformed lines
 - Skip events gracefully when required objects are not found
+- CRITICAL: When looping over events to fill histograms or compute observables,
+  always re-extract particle collections (e.g., jets, leptons, taus) for EACH event
+  inside the loop. Never rely on variables defined in a previous loop or outside
+  the current event iteration.
 
 CUTFLOW REQUIREMENTS:
 - Track number of events before and after each cut

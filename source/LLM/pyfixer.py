@@ -4,13 +4,19 @@ pyfixer.py - Fix Python code using local LLMs (improved version)
 
 Usage:
     from pyfixer import fix_code
+    
+    # Using local model
     fixed = fix_code(original_code, terminal_error)
+    
+    # Using Hugging Face Inference API
+    fixed = fix_code(original_code, terminal_error, use_api=True, api_key="your_hf_api_key")
 """
 
 import re
 import ast
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig  
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from huggingface_hub import InferenceClient  
 
 DEFAULT_MODEL = "Qwen/Qwen2.5-Coder-14B-Instruct"
 
@@ -164,19 +170,10 @@ def _add_line_numbers(code: str) -> str:
     return '\n'.join(f"{i+1:3d} | {line}" for i, line in enumerate(lines))
 
 
-def fix_code(code: str, error: str, model_id: str = DEFAULT_MODEL) -> str:
-    """
-    Fix Python code given the terminal error.
+def _fix_code_api(code: str, error: str, model_id: str, api_key: str) -> str:
+    """Fix code using the Hugging Face Inference API."""
     
-    Args:
-        code: Original buggy Python code
-        error: Terminal error message
-        model_id: Hugging Face model ID
-    
-    Returns:
-        Fixed Python code
-    """
-    model, tokenizer, device = _load_model(model_id)
+    client = InferenceClient(api_key=api_key)
     
     # Parse error for better context
     error_info = _parse_error(error)
@@ -217,23 +214,101 @@ def fix_code(code: str, error: str, model_id: str = DEFAULT_MODEL) -> str:
         {"role": "user", "content": user_prompt}
     ]
     
-    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    print(f"Fixing {error_info['type'] or 'error'} at line {error_info['line'] or '?'} via API...")
     
-    print(f"Fixing {error_info['type'] or 'error'} at line {error_info['line'] or '?'}...")
+    response = client.chat.completions.create(
+        model=model_id,
+        messages=messages,
+        max_tokens=4096,
+        temperature=0.9,
+        top_p=0.90,
+    )
     
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=4096,
-            temperature=0.9,
-            top_p=0.90,
-            do_sample=True,
-            pad_token_id=tokenizer.eos_token_id
-        )
+    return response.choices[0].message.content
+
+
+def fix_code(code: str, error: str, model_id: str = DEFAULT_MODEL, 
+             use_api: bool = False, api_key: str = None) -> str:
+    """
+    Fix Python code given the terminal error.
     
-    response = tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
-    fixed_code = _extract_code(response)
+    Args:
+        code: Original buggy Python code
+        error: Terminal error message
+        model_id: Hugging Face model ID
+        use_api: If True, use Hugging Face Inference API instead of local model
+        api_key: Hugging Face API key (required if use_api=True)
+    
+    Returns:
+        Fixed Python code
+    """
+    if use_api and not api_key:
+        raise ValueError("api_key is required when use_api=True")
+    
+    if use_api:
+        # Use Hugging Face Inference API
+        response = _fix_code_api(code, error, model_id, api_key)
+        fixed_code = _extract_code(response)
+    else:
+        # Use local model
+        model, tokenizer, device = _load_model(model_id)
+        
+        # Parse error for better context
+        error_info = _parse_error(error)
+        
+        # Build detailed prompt
+        numbered_code = _add_line_numbers(code)
+        
+        error_summary = []
+        if error_info["type"]:
+            error_summary.append(f"Error Type: {error_info['type']}")
+        if error_info["line"]:
+            error_summary.append(f"Error Line: {error_info['line']}")
+        if error_info["message"]:
+            error_summary.append(f"Message: {error_info['message']}")
+        
+        user_prompt = f"""Fix this Python code:
+
+## Code (with line numbers):
+```python
+{numbered_code}
+```
+
+## Error Analysis:
+{chr(10).join(error_summary) if error_summary else "See traceback below"}
+
+## Full Traceback:
+```
+{error}
+```
+
+## Task:
+1. Identify the bug at/near line {error_info['line'] or 'shown in traceback'}
+2. Check for related bugs elsewhere
+3. Return the COMPLETE fixed code (without line numbers)"""
+
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt}
+        ]
+        
+        prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = tokenizer(prompt, return_tensors="pt").to(device)
+        
+        print(f"Fixing {error_info['type'] or 'error'} at line {error_info['line'] or '?'}...")
+        
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=4096,
+                temperature=0.9,
+                top_p=0.90,
+                do_sample=True,
+                pad_token_id=tokenizer.eos_token_id
+            )
+        
+        response = tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
+        fixed_code = _extract_code(response)
     
     # Validate syntax
     is_valid, syntax_error = _validate_syntax(fixed_code)

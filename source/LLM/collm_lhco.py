@@ -9,10 +9,20 @@
 Usage:
     from collm_lhco import generate_lhco_code
     
+    # Using local model
     code = generate_lhco_code(
         user_input_path="user_input.txt",
         output_path="generated_analysis.py",
         model_id="Qwen/Qwen2.5-Coder-14B-Instruct"
+    )
+    
+    # Using Hugging Face Inference API
+    code = generate_lhco_code(
+        user_input_path="user_input.txt",
+        output_path="generated_analysis.py",
+        model_id="Qwen/Qwen2.5-Coder-14B-Instruct",
+        use_api=True,
+        api_key="your_hf_api_key"
     )
 """
 
@@ -52,7 +62,8 @@ ensure_packages()
 # Imports (after install)
 # =========================
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig  
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from huggingface_hub import InferenceClient  
 
 # =========================
 # Configuration
@@ -62,7 +73,7 @@ class Config:
     SYSTEM_PROMPT_PATH = Path("./source/configs/system_prompt.txt")
     
     # Generation Parameters
-    MAX_NEW_TOKENS = 5000
+    MAX_NEW_TOKENS = 4096
     TEMPERATURE = 0.1
     TOP_P = 0.95
     TOP_K = 50
@@ -303,10 +314,58 @@ def generate_code(model, tokenizer, prompt: str) -> str:
     
     return response
 
+
+# =========================
+# API Generation
+# =========================
+def generate_code_api(system_prompt: str, selection_cuts: str, plots_for_validation: str, 
+                      output_structure: str, model_id: str, api_key: str) -> str:
+    """Generate code using the Hugging Face Inference API."""
+    
+    client = InferenceClient(api_key=api_key)
+    
+    user_message = f"""Generate a complete, executable Python script to analyze LHCO files.
+
+[SELECTION_CUTS]
+{selection_cuts if selection_cuts and selection_cuts != '-' else 'No specific cuts required'}
+
+[PLOTS_FOR_VALIDATION]
+{plots_for_validation if plots_for_validation and plots_for_validation != '-' else 'No specific plots required'}
+
+[OUTPUT_STRUCTURE]
+{output_structure if output_structure else 'Print summary statistics'}
+
+REQUIREMENTS:
+1. Use ONLY standard Python libraries (math, sys) and optionally numpy/matplotlib
+2. Include the complete LHCO parser function
+3. The script should accept the LHCO filename as command line argument: sys.argv[1]
+4. Make the script complete and executable
+5. Include all helper functions needed
+
+Output ONLY the Python code. Start with the shebang or imports. No explanations."""
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_message}
+    ]
+    
+    print("Generating code via API...")
+    
+    response = client.chat.completions.create(
+        model=model_id,
+        messages=messages,
+        max_tokens=Config.MAX_NEW_TOKENS,
+        temperature=Config.TEMPERATURE,
+        top_p=Config.TOP_P,
+    )
+    
+    return response.choices[0].message.content
+
 # =========================
 # Main Function
 # =========================
-def generate_lhco_code(user_input_path: str, output_path: str, model_id: str = "Qwen/Qwen2.5-Coder-14B-Instruct") -> str:
+def generate_lhco_code(user_input_path: str, output_path: str, model_id: str = "Qwen/Qwen2.5-Coder-14B-Instruct",
+                       use_api: bool = False, api_key: str = None) -> str:
     """
     Generate LHCO analysis code using LLM.
     
@@ -314,10 +373,15 @@ def generate_lhco_code(user_input_path: str, output_path: str, model_id: str = "
         user_input_path: Path to user input file
         output_path: Path to save generated code
         model_id: HuggingFace model ID
+        use_api: If True, use Hugging Face Inference API instead of local model
+        api_key: Hugging Face API key (required if use_api=True)
     
     Returns:
         Generated code string, or None if failed
     """
+    if use_api and not api_key:
+        raise ValueError("api_key is required when use_api=True")
+    
     user_input_path = Path(user_input_path)
     output_path = Path(output_path)
     
@@ -325,20 +389,31 @@ def generate_lhco_code(user_input_path: str, output_path: str, model_id: str = "
     system_prompt = load_text_file(Config.SYSTEM_PROMPT_PATH)
     selection_cuts, plots_for_validation, output_structure = parse_user_input(user_input_path)
 
-    # Load model
-    model, tokenizer = load_model_and_tokenizer(model_id)
-    
-    # Build prompt
-    prompt = build_prompt(
-        system_prompt=system_prompt,
-        selection_cuts=selection_cuts,
-        plots_for_validation=plots_for_validation,
-        output_structure=output_structure,
-        tokenizer=tokenizer
-    )
-    
-    # Generate
-    response = generate_code(model, tokenizer, prompt)
+    if use_api:
+        # Use Hugging Face Inference API
+        response = generate_code_api(
+            system_prompt=system_prompt,
+            selection_cuts=selection_cuts,
+            plots_for_validation=plots_for_validation,
+            output_structure=output_structure,
+            model_id=model_id,
+            api_key=api_key
+        )
+    else:
+        # Use local model
+        model, tokenizer = load_model_and_tokenizer(model_id)
+        
+        # Build prompt
+        prompt = build_prompt(
+            system_prompt=system_prompt,
+            selection_cuts=selection_cuts,
+            plots_for_validation=plots_for_validation,
+            output_structure=output_structure,
+            tokenizer=tokenizer
+        )
+        
+        # Generate
+        response = generate_code(model, tokenizer, prompt)
     
     # Extract and save
     code = extract_python_code(response)

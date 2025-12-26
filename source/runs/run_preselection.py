@@ -11,13 +11,6 @@ import warnings
 warnings.filterwarnings("ignore", message="To copy construct from a tensor")
 ##=============================##
 ##=============================##
-
-
-
-if len(sys.argv) > 1:
-    config_path = sys.argv[1]
-    
-output_dir, DEFAULT_MODEL,MAX_RETRIES,input_test,input_user = read_conf(config_path)
 ''' 
 This is the main code that runs the LLM analysis to generate the analysis code.
 
@@ -36,22 +29,18 @@ llama/CodeLlama-13b-Instruct-hf                   13B     ~18GB    ⭐⭐⭐    
 ##=============================
 # Configs 
 ##=============================
-#output_dir = "/data1/hammad/CoLLM/output/"
-#DEFAULT_MODEL = "Qwen/Qwen2.5-Coder-7B-Instruct"
-#MAX_RETRIES = 3
-#input_test = "/data1/hammad/collm/collm_lhco/signal_1.lhco"
-#input_user = "/data1/hammad/CoLLM/templates/user_input_2.txt"
-output_code = output_dir+"generated_lhco_analysis.py"
+config_path = None
+if len(sys.argv) > 1:
+    config_path = sys.argv[1]
 
 def recreate_dir(path):
     path = Path(path)
     if path.exists():
         shutil.rmtree(path)
-    path.mkdir(parents=True, exist_ok=True)
-recreate_dir(output_dir)    
+    path.mkdir(parents=True, exist_ok=True)    
 
 
-def run_and_capture_error(script_path: str, *args) -> str:
+def run_and_capture_error(script_path: str, *args, output_dir: str = None) -> str:
     """Run a Python script and return any error output."""
     env = os.environ.copy()
     env['MPLBACKEND'] = 'Agg'
@@ -64,54 +53,65 @@ def run_and_capture_error(script_path: str, *args) -> str:
     )
     return result.stderr if result.returncode != 0 else ""
 
-#=======================================
-# Ensure the core packages are installed
-#=======================================
-ensure_packages()
-#===========================
 
-def run_LLM(output_dir: str,DEFAULT_MODEL: str, input_test: str,input_user: str, output_code:str,MAX_RETRIES: int ):
+def run_LLM(output_dir: str, DEFAULT_MODEL: str, input_test: str, input_user: str, output_code: str, MAX_RETRIES: int, use_api: bool, api_key: str):
     
     ##=======================================================================
-   # suppress the plt.show() if exist in the generated code
+    # suppress the plt.show() if exist in the generated code
     ##=======================================================================
-   env = os.environ.copy()
-   env['MPLBACKEND'] = 'Agg'
+    env = os.environ.copy()
+    env['MPLBACKEND'] = 'Agg'
     ##================================
 
-   generate_lhco_code(input_user, output_code, DEFAULT_MODEL)
-   error = run_and_capture_error(output_code, input_test)
-   retries = 0
+    generate_lhco_code(input_user, output_code, DEFAULT_MODEL, use_api=use_api, api_key=api_key)
+    error = run_and_capture_error(output_code, input_test, output_dir=output_dir)
+    retries = 0
 
-   while error and retries < MAX_RETRIES:
-       print(f"Trial {retries + 1}/{MAX_RETRIES}")
+    while error and retries < MAX_RETRIES:
+        print(f"Trial {retries + 1}/{MAX_RETRIES}")
     
-       # Step 1: Try to fix the code
-       print("  Attempting to fix...")
-       code = Path(output_code).read_text()
-       fixed = fix_code(code, error, DEFAULT_MODEL)
-       Path(output_code).write_text(fixed)
-       error = run_and_capture_error(output_code, input_test)
+        # Try to fix the code
+        print("  Attempting to fix...")
+        code = Path(output_code).read_text()
+        fixed = fix_code(code, error, DEFAULT_MODEL, use_api=use_api, api_key=api_key)
+        Path(output_code).write_text(fixed)
+        error = run_and_capture_error(output_code, input_test, output_dir=output_dir)
     
-       if not error:
-           break  # Fixed successfully
-           # Step 2: If fix failed, regenerate from scratch
-       print("  Fix failed, regenerating...")
-       generate_lhco_code(input_user, output_code, DEFAULT_MODEL)
-       error = run_and_capture_error(output_code, input_test)
+        if not error:
+            break  
+       
+        #  If fix failed, regenerate from scratch
+        print("  Fix failed, regenerating...")
+        generate_lhco_code(input_user, output_code, DEFAULT_MODEL, use_api=use_api, api_key=api_key)
+        error = run_and_capture_error(output_code, input_test, output_dir=output_dir)
     
-       retries += 1
+        if not error:
+            break  
+       
+        retries += 1
 
 
-   if error: 
-       print(''' Failed to excute the analysis code. Please check the following:  
-   1- please make sure the requested plots are ensured in the selection cuts.
-   2- Make sure to write the code in an understandable and clear way.
-   3- You may increase the number of trials to fix the generated code.
-   4- You may consider larger LLM model for complicated analysis.
+    if error: 
+        print(''' Failed to excute the analysis code. Please check the following:  
+    1- please make sure the requested plots are ensured in the selection cuts.
+    2- Make sure to write the code in an understandable and clear way.
+    3- You may increase the number of trials to fix the generated code.
+    4- You may consider larger LLM model for complicated analysis.
     ''')
-   else:
-       print(f"Analysis code is generated susccesfully. Output is stored in {output_dir}")
-       subprocess.run([sys.executable,output_code,input_test ],cwd=output_dir, env = env)
+    else:
+        print(f"Analysis code is generated susccesfully. Output is stored in {output_dir}")
+        subprocess.run([sys.executable, output_code, input_test], cwd=output_dir, env=env)
 
-run_LLM(output_dir,DEFAULT_MODEL, input_test,input_user, output_code,MAX_RETRIES )
+
+if __name__ == "__main__":
+    #=======================================
+    # Ensure the core packages are installed
+    #=======================================
+    ensure_packages()
+    #===========================
+    
+    output_dir, DEFAULT_MODEL, MAX_RETRIES, input_test, input_user, use_api, api_key = read_conf(config_path)
+    output_code = output_dir + "generated_lhco_analysis.py"
+    recreate_dir(output_dir)
+    
+    run_LLM(output_dir, DEFAULT_MODEL, input_test, input_user, output_code, MAX_RETRIES, use_api, api_key)
