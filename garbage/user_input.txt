@@ -1,0 +1,10 @@
+[SELECTION_CUTS]
+-
+
+
+[PLOTS_FOR_VALIDATION]
+- 
+
+[OUTPUT_STRUCTURE]
+- Total events
+- Events after electron selection

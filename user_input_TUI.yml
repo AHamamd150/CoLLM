@@ -2,8 +2,8 @@
 # Generic setup. To be adjusted by the user
 #=================================
 
-Output_dir : "/data1/hammad/CoLLM/output/"
+Output_dir : "/Users/hammad/work/CoLLM/output/"
 DEFAULT_MODEL : "Qwen/Qwen2.5-Coder-7B-Instruct"
 MAX_RETRIES : 3
-Input_file : "/data1/hammad/CoLLM/data/signal_1.lhco"
-User_input : "/data1/hammad/CoLLM/templates/user_input_2.txt" # user input to generate the analysis code
+Input_file : "/Users/hammad/work/CoLLM/data/signal_1.lhco"
+User_input : "/Users/hammad/work/CoLLM/templates/user_input_2.txt" # user input to generate the analysis code

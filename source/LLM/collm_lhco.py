@@ -59,7 +59,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 # =========================
 class Config:
     """Centralized configuration."""
-    SYSTEM_PROMPT_PATH = Path("./source/LLM/system_prompt.txt")
+    SYSTEM_PROMPT_PATH = Path("./source/configs/system_prompt.txt")
     
     # Generation Parameters
     MAX_NEW_TOKENS = 5000
@@ -158,6 +158,21 @@ def parse_user_input(path: Path) -> Tuple[str, str, str]:
     return selection_cuts, plots_for_validation, output_structure
 
 # =========================
+# Device Detection
+# =========================
+def get_device_and_dtype():
+    """Detect the best available device and appropriate dtype."""
+    if torch.cuda.is_available():
+        # NVIDIA GPU
+        return "cuda", torch.float16
+    elif torch.backends.mps.is_available():
+        # Apple Silicon / Mac GPU
+        return "mps", torch.float16
+    else:
+        # CPU fallback
+        return "cpu", torch.float32
+
+# =========================
 # Model Loading
 # =========================
 def load_model_and_tokenizer(model_id: str):
@@ -169,13 +184,25 @@ def load_model_and_tokenizer(model_id: str):
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     
-    model = AutoModelForCausalLM.from_pretrained(
-        model_id,
-        device_map="auto",
-        dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-        low_cpu_mem_usage=True,
-        trust_remote_code=True,
-    )
+    device, dtype = get_device_and_dtype()
+    print(f"Using device: {device}")
+    
+    if device == "mps":
+        # MPS doesn't work well with device_map="auto"
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+            trust_remote_code=True,
+        ).to(device)
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            device_map="auto",
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True,
+            trust_remote_code=True,
+        )
     
     return model, tokenizer
 

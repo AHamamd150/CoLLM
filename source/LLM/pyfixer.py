@@ -45,18 +45,41 @@ _tokenizer = None
 _device = None
 
 
+def _get_device_and_dtype():
+    """Detect the best available device and appropriate dtype."""
+    if torch.cuda.is_available():
+        # NVIDIA GPU
+        return "cuda", torch.float16
+    elif torch.backends.mps.is_available():
+        # Apple Silicon / Mac GPU
+        return "mps", torch.float16
+    else:
+        # CPU fallback
+        return "cpu", torch.float32
+
+
 def _load_model(model_id: str = DEFAULT_MODEL):
     global _model, _tokenizer, _device
     if _model is None:
         print(f"Loading model: {model_id}")
-        _device = "cuda" if torch.cuda.is_available() else "cpu"
+        _device, dtype = _get_device_and_dtype()
+        print(f"Using device: {_device}")
         _tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-        _model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            trust_remote_code=True,
-            dtype=torch.float16 if _device == "cuda" else torch.float32,
-            device_map="auto" if _device == "cuda" else None
-        )
+        
+        if _device == "mps":
+            # MPS doesn't work well with device_map="auto"
+            _model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                trust_remote_code=True,
+                torch_dtype=dtype,
+            ).to(_device)
+        else:
+            _model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                trust_remote_code=True,
+                torch_dtype=dtype,
+                device_map="auto" if _device == "cuda" else None
+            )
     return _model, _tokenizer, _device
 
 
