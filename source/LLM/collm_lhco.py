@@ -74,10 +74,10 @@ class Config:
     
     # Generation Parameters
     MAX_NEW_TOKENS = 4096
-    TEMPERATURE = 0.1
-    TOP_P = 0.95
-    TOP_K = 50
-    DO_SAMPLE = True
+    TEMPERATURE = 0.0
+    TOP_P = 1.0
+    TOP_K = 0
+    DO_SAMPLE = False
 
 # =========================
 # Utility Functions
