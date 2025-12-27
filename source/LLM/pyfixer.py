@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-pyfixer.py - Fix Python code using local LLMs (improved version)
+pyfixer.py - Fix Python code using local LLMs 
 
 Usage:
     from pyfixer import fix_code
