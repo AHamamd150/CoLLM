@@ -17,15 +17,34 @@
 
 *Generate production-ready Python analysis scripts for LHCO particle physics data using Large Language Models — no boilerplate, no headaches.*
 
-[Installation](#-installation) •
-[Quick Start](#-quick-start) •
-[Features](#-features) •
-[Usage](#-usage) •
-[Configuration](#%EF%B8%8F-configuration) •
-[Troubleshooting](#-troubleshooting) •
-[Contributing](#-contributing)
-
 </div>
+
+---
+
+## 📑 Table of Contents
+
+- [🔬 What is CoLLM?](#-what-is-collm)
+  - [✨ Key Features](#-key-features)
+- [📦 Installation](#-installation)
+  - [Step 1: Clone the Repository](#step-1-clone-the-repository)
+  - [Step 2: Create a Conda Environment](#step-2-create-a-conda-environment)
+  - [Step 3: Install Dependencies](#step-3-install-dependencies)
+- [🚀 Quick Start](#-quick-start)
+  - [Option 1: Terminal UI (TUI)](#option-1-terminal-ui-tui)
+  - [Option 2: Graphical UI (GUI)](#option-2-graphical-ui-gui)
+- [📁 Project Structure](#-project-structure)
+- [⚙️ Configuration](#️-configuration)
+  - [User Input File Format](#user-input-file-format)
+  - [Example Configuration](#example-configuration)
+  - [Supported LLM Models](#supported-llm-models)
+- [🔧 Usage](#-usage)
+  - [Using the HuggingFace API](#using-the-huggingface-api)
+  - [Programmatic Usage](#programmatic-usage)
+  - [Running Generated Scripts](#running-generated-scripts)
+- [🔄 How It Works](#-how-it-works)
+- [📚 LHCO File Format Reference](#-lhco-file-format-reference)
+- [🗺️ Roadmap](#️-roadmap)
+- [📄 License](#-license)
 
 ---
 
@@ -332,4 +351,3 @@ flowchart LR
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
