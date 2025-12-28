@@ -5,22 +5,33 @@
 # Does NOT execute the generated code
 # =========================
 
+"""
+Usage:
+    from collm_lhco import generate_lhco_code
+    
+    # Using local model
+    code = generate_lhco_code(
+        user_input_path="user_input.txt",
+        output_path="generated_analysis.py",
+        model_id="Qwen/Qwen2.5-Coder-14B-Instruct"
+    )
+    
+    # Using Hugging Face Inference API
+    code = generate_lhco_code(
+        user_input_path="user_input.txt",
+        output_path="generated_analysis.py",
+        model_id="Qwen/Qwen2.5-Coder-14B-Instruct",
+        use_api=True,
+        api_key="your_hf_api_key"
+    )
+"""
+
 # Standard Libraries
 import sys
 import subprocess
 from pathlib import Path
 import re
-import logging
 from typing import Dict, Any, Tuple
-
-# =========================
-# Setup Logging
-# =========================
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # =========================
 # Minimal Dependency Loader
@@ -37,17 +48,13 @@ def ensure_packages():
     for module, pip_name in REQUIRED_PACKAGES.items():
         try:
             __import__(module)
-            logger.info(f"✓ {module} already installed")
         except ImportError:
-            logger.warning(f"Installing {pip_name}...")
             try:
                 subprocess.check_call([
                     sys.executable, "-m", "pip", "install", pip_name
                 ], stdout=subprocess.DEVNULL)
-                logger.info(f" Successfully installed {pip_name}")
             except subprocess.CalledProcessError as e:
-                logger.error(f" Failed to install {pip_name}: {e}")
-                raise
+                raise RuntimeError(f"Failed to install {pip_name}: {e}")
 
 ensure_packages()
 
@@ -55,27 +62,20 @@ ensure_packages()
 # Imports (after install)
 # =========================
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from huggingface_hub import InferenceClient  
 
 # =========================
 # Configuration
 # =========================
 class Config:
     """Centralized configuration."""
-    SYSTEM_PROMPT_PATH = Path("system_prompt.txt")
-    USER_INPUT_PATH = Path("user_input_1.txt")
-    OUTPUT_CODE_PATH = Path("generated_lhco_analysis.py")
-    
-    # Model Configuration
-    MODEL_ID = "Qwen/Qwen2.5-Coder-14B-Instruct"
-    # Alternatives:
-    # MODEL_ID = "codellama/CodeLlama-7b-Instruct-hf"
-    # MODEL_ID = "deepseek-ai/deepseek-coder-6.7b-instruct"
+    SYSTEM_PROMPT_PATH = Path("./source/configs/system_prompt.txt")
     
     # Generation Parameters
-    MAX_NEW_TOKENS = 5000
-    TEMPERATURE = 0.2
-    TOP_P = 0.90
+    MAX_NEW_TOKENS = 4096
+    TEMPERATURE = 0.1
+    TOP_P = 0.95
     TOP_K = 50
     DO_SAMPLE = True
 
@@ -93,14 +93,12 @@ def load_text_file(file_path: Path) -> str:
     if not content:
         raise ValueError(f"File is empty: {file_path}")
     
-    logger.info(f"✓ Loaded {file_path} ({len(content)} characters)")
     return content
 
 
 def extract_python_code(text: str) -> str:
     """Extract Python code from LLM response."""
     if not text or not text.strip():
-        logger.warning("Empty response received")
         return ""
     
     text = text.strip()
@@ -110,7 +108,6 @@ def extract_python_code(text: str) -> str:
     python_matches = re.findall(python_block_pattern, text, re.DOTALL)
     if python_matches:
         code = max(python_matches, key=len).strip()
-        logger.info(f"✓ Extracted code from ```python block ({len(code)} chars)")
         return code
     
     # Pattern 2: Extract from ``` ... ``` blocks
@@ -118,7 +115,6 @@ def extract_python_code(text: str) -> str:
     generic_matches = re.findall(generic_block_pattern, text, re.DOTALL)
     if generic_matches:
         code = max(generic_matches, key=len).strip()
-        logger.info(f"✓ Extracted code from ``` block ({len(code)} chars)")
         return code
     
     # Pattern 3: Find code starting with common imports
@@ -141,45 +137,19 @@ def extract_python_code(text: str) -> str:
                     break
                 code_lines.append(line)
             code = '\n'.join(code_lines).strip()
-            logger.info(f"✓ Extracted raw Python code ({len(code)} chars)")
             return code
     
     # Check if response is garbage
     if 'Human:' in text or text.startswith('H:') or '[SELECTION_CUTS]' in text[:100]:
-        logger.error("✗ Model generated conversation instead of code")
         return ""
     
-    logger.warning("No code block found, returning raw text")
     return text
 
 
 def save_code(code: str, output_path: Path) -> None:
     """Save generated code to file."""
-    try:
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(code)
-        logger.info(f"✓ Saved generated code to {output_path}")
-    except IOError as e:
-        logger.error(f"✗ Failed to save code: {e}")
-        raise
-
-
-def check_gpu_availability() -> Dict[str, Any]:
-    """Check GPU availability and memory."""
-    gpu_info = {
-        "available": torch.cuda.is_available(),
-        "device_count": 0,
-        "device_name": None,
-    }
-    
-    if gpu_info["available"]:
-        gpu_info["device_count"] = torch.cuda.device_count()
-        gpu_info["device_name"] = torch.cuda.get_device_name(0)
-        logger.info(f"✓ GPU: {gpu_info['device_name']}")
-    else:
-        logger.warning("⚠ No GPU available, using CPU (this will be slow)")
-    
-    return gpu_info
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(code)
 
 
 def parse_user_input(path: Path) -> Tuple[str, str, str]:
@@ -196,41 +166,71 @@ def parse_user_input(path: Path) -> Tuple[str, str, str]:
     plots_for_validation = extract("PLOTS_FOR_VALIDATION")
     output_structure = extract("OUTPUT_STRUCTURE")
 
-    logger.info("✓ Parsed user input sections:")
-    logger.info(f"  - SELECTION_CUTS: {len(selection_cuts)} chars")
-    logger.info(f"  - PLOTS_FOR_VALIDATION: {len(plots_for_validation)} chars")
-    logger.info(f"  - OUTPUT_STRUCTURE: {len(output_structure)} chars")
-
     return selection_cuts, plots_for_validation, output_structure
+
+# =========================
+# Device Detection
+# =========================
+def get_device_and_dtype():
+    """Detect the best available device and appropriate dtype."""
+    if torch.cuda.is_available():
+        # NVIDIA GPU
+        return "cuda", torch.float16
+    elif torch.backends.mps.is_available():
+        # Apple Silicon / Mac GPU
+        return "mps", torch.float16
+    else:
+        # CPU fallback
+        return "cpu", torch.float32
 
 # =========================
 # Model Loading
 # =========================
 def load_model_and_tokenizer(model_id: str):
     """Load model and tokenizer."""
-    logger.info(f"Loading model: {model_id}")
+    print(f"Loading model: {model_id}")
     
-    try:
-        tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
-        logger.info("✓ Tokenizer loaded")
-        
-        if tokenizer.pad_token is None:
-            tokenizer.pad_token = tokenizer.eos_token
+    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+    
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    
+    device, dtype = get_device_and_dtype()
+    print(f"Using device: {device}")
+    
+    if device == "cuda":
+        # CUDA supports 4-bit quantization with BitsAndBytes
+        quantization_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4"
+        )
         
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
+            quantization_config=quantization_config,
             device_map="auto",
-            dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+            trust_remote_code=True,
+        )
+    elif device == "mps":
+        # MPS: Use float16 and CPU offloading for large models
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            torch_dtype=torch.float16,
+            low_cpu_mem_usage=True,
+            trust_remote_code=True,
+        ).to(device)
+    else:
+        # CPU fallback
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            torch_dtype=dtype,
             low_cpu_mem_usage=True,
             trust_remote_code=True,
         )
-        logger.info("✓ Model loaded")
-        
-        return model, tokenizer
-        
-    except Exception as e:
-        logger.error(f"✗ Failed to load model: {e}")
-        raise
+    
+    return model, tokenizer
 
 # =========================
 # Prompt Building
@@ -270,9 +270,7 @@ Output ONLY the Python code. Start with the shebang or imports. No explanations.
             tokenize=False, 
             add_generation_prompt=True
         )
-        logger.info("✓ Applied chat template")
     except Exception as e:
-        logger.warning(f"Chat template failed ({e}), using fallback format")
         prompt = f"""### System:
 {system_prompt}
 
@@ -291,24 +289,22 @@ import math
 # =========================
 # Generation
 # =========================
-def generate_code(model, tokenizer, prompt: str, config: Config) -> str:
+def generate_code(model, tokenizer, prompt: str) -> str:
     """Generate code using the model."""
     
-    logger.info("Tokenizing prompt...")
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192)
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
     
-    logger.info(f"  Input tokens: {inputs['input_ids'].shape[1]}")
-    logger.info("Generating... (this may take a few minutes)")
+    print("Generating code may takes few minutes...")
     
     with torch.no_grad():
         outputs = model.generate(
             **inputs,
-            max_new_tokens=config.MAX_NEW_TOKENS,
-            do_sample=config.DO_SAMPLE,
-            temperature=config.TEMPERATURE,
-            top_p=config.TOP_P,
-            top_k=config.TOP_K,
+            max_new_tokens=Config.MAX_NEW_TOKENS,
+            do_sample=Config.DO_SAMPLE,
+            temperature=Config.TEMPERATURE,
+            top_p=Config.TOP_P,
+            top_k=Config.TOP_K,
             pad_token_id=tokenizer.pad_token_id,
             eos_token_id=tokenizer.eos_token_id,
         )
@@ -316,33 +312,98 @@ def generate_code(model, tokenizer, prompt: str, config: Config) -> str:
     new_tokens = outputs[0][inputs['input_ids'].shape[1]:]
     response = tokenizer.decode(new_tokens, skip_special_tokens=True)
     
-    logger.info(f"✓ Generated {len(response)} characters")
     return response
 
-# =========================
-# Main Execution
-# =========================
-def main():
-    """Main execution function."""
-    try:
-        logger.info("=" * 60)
-        logger.info("LHCO Analysis Code Generator")
-        logger.info("=" * 60)
-        
-        # Check GPU
-        gpu_info = check_gpu_availability()
-        
-        # Load prompts
-        logger.info("\n[1/4] Loading prompts...")
-        system_prompt = load_text_file(Config.SYSTEM_PROMPT_PATH)
-        selection_cuts, plots_for_validation, output_structure = parse_user_input(Config.USER_INPUT_PATH)
 
-        # Load model
-        logger.info("\n[2/4] Loading model...")
-        model, tokenizer = load_model_and_tokenizer(Config.MODEL_ID)
+# =========================
+# API Generation
+# =========================
+def generate_code_api(system_prompt: str, selection_cuts: str, plots_for_validation: str, 
+                      output_structure: str, model_id: str, api_key: str) -> str:
+    """Generate code using the Hugging Face Inference API."""
+    
+    client = InferenceClient(api_key=api_key)
+    
+    user_message = f"""Generate a complete, executable Python script to analyze LHCO files.
+
+[SELECTION_CUTS]
+{selection_cuts if selection_cuts and selection_cuts != '-' else 'No specific cuts required'}
+
+[PLOTS_FOR_VALIDATION]
+{plots_for_validation if plots_for_validation and plots_for_validation != '-' else 'No specific plots required'}
+
+[OUTPUT_STRUCTURE]
+{output_structure if output_structure else 'Print summary statistics'}
+
+REQUIREMENTS:
+1. Use ONLY standard Python libraries (math, sys) and optionally numpy/matplotlib
+2. Include the complete LHCO parser function
+3. The script should accept the LHCO filename as command line argument: sys.argv[1]
+4. Make the script complete and executable
+5. Include all helper functions needed
+
+Output ONLY the Python code. Start with the shebang or imports. No explanations."""
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_message}
+    ]
+    
+    print("Generating code via API...")
+    
+    response = client.chat.completions.create(
+        model=model_id,
+        messages=messages,
+        max_tokens=Config.MAX_NEW_TOKENS,
+        temperature=Config.TEMPERATURE,
+        top_p=Config.TOP_P,
+    )
+    
+    return response.choices[0].message.content
+
+# =========================
+# Main Function
+# =========================
+def generate_lhco_code(user_input_path: str, output_path: str, model_id: str = "Qwen/Qwen2.5-Coder-14B-Instruct",
+                       use_api: bool = False, api_key: str = None) -> str:
+    """
+    Generate LHCO analysis code using LLM.
+    
+    Args:
+        user_input_path: Path to user input file
+        output_path: Path to save generated code
+        model_id: HuggingFace model ID
+        use_api: If True, use Hugging Face Inference API instead of local model
+        api_key: Hugging Face API key (required if use_api=True)
+    
+    Returns:
+        Generated code string, or None if failed
+    """
+    if use_api and not api_key:
+        raise ValueError("api_key is required when use_api=True")
+    
+    user_input_path = Path(user_input_path)
+    output_path = Path(output_path)
+    
+    # Load prompts
+    system_prompt = load_text_file(Config.SYSTEM_PROMPT_PATH)
+    selection_cuts, plots_for_validation, output_structure = parse_user_input(user_input_path)
+
+    if use_api:
+        # Use Hugging Face Inference API
+        response = generate_code_api(
+            system_prompt=system_prompt,
+            selection_cuts=selection_cuts,
+            plots_for_validation=plots_for_validation,
+            output_structure=output_structure,
+            model_id=model_id,
+            api_key=api_key
+        )
+    else:
+        # Use local model
+        model, tokenizer = load_model_and_tokenizer(model_id)
         
         # Build prompt
-        logger.info("\n[3/4] Building prompt...")
         prompt = build_prompt(
             system_prompt=system_prompt,
             selection_cuts=selection_cuts,
@@ -351,82 +412,15 @@ def main():
             tokenizer=tokenizer
         )
         
-        logger.info(f"  Total prompt length: {len(prompt)} characters")
-        
         # Generate
-        logger.info("\n[4/4] Generating code...")
-        response = generate_code(model, tokenizer, prompt, Config)
-        
-        # Extract and save
-        code = extract_python_code(response)
-        
-        if code:
-            save_code(code, Config.OUTPUT_CODE_PATH)
-            success = True
-        else:
-            logger.error("✗ Failed to generate valid Python code")
-            debug_path = Path("debug_raw_response.txt")
-            with open(debug_path, "w") as f:
-                f.write(response)
-            logger.info(f"  Raw response saved to {debug_path}")
-            success = False
-        
-        # Summary
-        logger.info("\n" + "=" * 60)
-        logger.info("GENERATION SUMMARY")
-        logger.info("=" * 60)
-        logger.info(f"Model: {Config.MODEL_ID}")
-        logger.info(f"GPU Used: {'Yes' if gpu_info['available'] else 'No'}")
-        logger.info(f"Success: {'Yes' if success else 'No'}")
-        if success:
-            logger.info(f"Generated Code: {len(code)} characters")
-            logger.info(f"Output File: {Config.OUTPUT_CODE_PATH}")
-            logger.info("\nCODE PREVIEW:")
-            logger.info("-" * 60)
-            print(code[:800] + ("..." if len(code) > 800 else ""))
-        logger.info("=" * 60)
-        
-        return code if success else None
-        
-    except FileNotFoundError as e:
-        logger.error(f"✗ File error: {e}")
-        sys.exit(1)
-        
-    except Exception as e:
-        logger.error(f"✗ Unexpected error: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
-
-# =========================
-# Entry Point
-# =========================
-if __name__ == "__main__":
-    import argparse
+        response = generate_code(model, tokenizer, prompt)
     
-    parser = argparse.ArgumentParser(description="Generate LHCO analysis code using LLM")
-    parser.add_argument("--model", "-m", type=str, default=Config.MODEL_ID,
-                        help="HuggingFace model ID")
-    parser.add_argument("--max-tokens", "-t", type=int, default=Config.MAX_NEW_TOKENS,
-                        help="Maximum new tokens to generate")
-    parser.add_argument("--output", "-o", type=str, default=str(Config.OUTPUT_CODE_PATH),
-                        help="Output Python file path")
-    parser.add_argument("--system-prompt", "-s", type=str, default=str(Config.SYSTEM_PROMPT_PATH),
-                        help="Path to system prompt file")
-    parser.add_argument("--user-input", "-u", type=str, default=str(Config.USER_INPUT_PATH),
-                        help="Path to user input file")
+    # Extract and save
+    code = extract_python_code(response)
     
-    args = parser.parse_args()
-    
-    if args.model:
-        Config.MODEL_ID = args.model
-    if args.max_tokens:
-        Config.MAX_NEW_TOKENS = args.max_tokens
-    if args.output:
-        Config.OUTPUT_CODE_PATH = Path(args.output)
-    if args.system_prompt:
-        Config.SYSTEM_PROMPT_PATH = Path(args.system_prompt)
-    if args.user_input:
-        Config.USER_INPUT_PATH = Path(args.user_input)
-    
-    main()
+    if code:
+        save_code(code, output_path)
+        return code
+    else:
+        print("Failed to generate valid code")
+        return None

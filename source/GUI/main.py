@@ -1,9 +1,35 @@
 import os
+import subprocess
+import sys
+import html
+import logging
+import warnings
+import tempfile
+
+# Always define project root
+_project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Add project root to path when running directly
+if __package__ is None or __package__ == '':
+    sys.path.insert(0, _project_root)
+#=======================================
+#=======================================
+#=======================================
+
+# Suppress Streamlit warnings
+os.environ['STREAMLIT_LOG_LEVEL'] = 'error'
+logging.getLogger('streamlit').setLevel(logging.ERROR)
+logging.getLogger('streamlit.runtime.scriptrunner_utils.script_run_context').setLevel(logging.ERROR)
+warnings.filterwarnings('ignore', message='.*missing ScriptRunContext.*')
+warnings.filterwarnings('ignore', message='.*to view this Streamlit app.*')
+
 import numpy as np
 import matplotlib.pyplot as plt
 import time
 import json
 import streamlit as st
+import threading
+from queue import Queue
 
 # ════════════════════════════════════════════════════════════════════════════════
 #                              PAGE CONFIGURATION
@@ -15,6 +41,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Import project modules AFTER page config to avoid Streamlit issues
+from source.utils.requirements_check import ensure_packages 
+from source.runs.run_preselection_GUI import run_LLM
+LLM_RUNNER_AVAILABLE = True
+
 # ════════════════════════════════════════════════════════════════════════════════
 #                              CUSTOM CSS STYLING
 # ════════════════════════════════════════════════════════════════════════════════
@@ -24,18 +55,19 @@ st.markdown("""
     
     /* ═══════════════════ ROOT VARIABLES ═══════════════════ */
     :root {
-        --bg-primary: #0a0a0f;
-        --bg-secondary: #12121a;
-        --bg-card: #16161f;
-        --bg-hover: #1e1e2a;
+        --bg-primary: #121220;
+        --bg-secondary: #1a1a2e;
+        --bg-card: #1e1e30;
+        --bg-hover: #282840;
         --accent-primary: #6366f1;
         --accent-secondary: #8b5cf6;
         --accent-tertiary: #a855f7;
         --accent-glow: rgba(99, 102, 241, 0.3);
         --text-primary: #f1f5f9;
-        --text-secondary: #94a3b8;
+        --text-secondary: #fff;
+        --text-title: #94a3b8;
         --text-muted: #64748b;
-        --border-color: #2a2a3a;
+        --border-color: #3a3a4a;
         --success: #10b981;
         --warning: #f59e0b;
         --error: #ef4444;
@@ -55,7 +87,7 @@ st.markdown("""
     
     /* ═══════════════════ SIDEBAR STYLING ═══════════════════ */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+        background: linear-gradient(180deg, #1a1a2e 0%, #121220 100%);
         border-right: 1px solid var(--border-color);
         width: 340px !important;
     }
@@ -117,7 +149,7 @@ st.markdown("""
     .hero-subtitle {
         font-family: 'Sora', sans-serif;
         font-size: 1.1rem;
-        color: var(--text-secondary);
+        color: var(--text-title);
         max-width: 700px;
         line-height: 1.7;
     }
@@ -304,20 +336,23 @@ st.markdown("""
     /* ═══════════════════ TABS STYLING ═══════════════════ */
     .stTabs [data-baseweb="tab-list"] {
         background: var(--bg-card);
-        border-radius: 12px;
-        padding: 6px;
-        gap: 8px;
-        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 18px;
+        gap: 20px;
+        border: 2px solid var(--border-color);
     }
     
     .stTabs [data-baseweb="tab"] {
         background: transparent !important;
-        border-radius: 8px !important;
+        border-radius: 18px !important;
         color: var(--text-secondary) !important;
-        font-family: 'Sora', sans-serif !important;
-        font-weight: 500 !important;
-        padding: 10px 20px !important;
+        font-family: 'Space Grotesk', sans-serif !important;
+        font-weight: 800 !important;
+        font-size: 2.2rem !important;
+        padding: 32px 60px !important;
         transition: all 0.2s ease !important;
+        min-height: 90px !important;
+
     }
     
     .stTabs [data-baseweb="tab"]:hover {
@@ -329,6 +364,7 @@ st.markdown("""
         background: var(--gradient-1) !important;
         color: white !important;
     }
+    
     
     /* ═══════════════════ PROGRESS BAR ═══════════════════ */
     .stProgress > div > div > div {
@@ -435,6 +471,36 @@ st.markdown("""
     @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
+    }
+    
+    @keyframes terminalPulse {
+        0%, 100% { 
+            box-shadow: 0 0 5px rgba(99, 102, 241, 0.3);
+        }
+        50% { 
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.6), 0 0 30px rgba(168, 85, 247, 0.3);
+        }
+    }
+    
+    @keyframes cursorBlink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
+    }
+    
+    .terminal-output {
+        animation: terminalPulse 1.5s ease-in-out infinite;
+        border: 1px solid var(--accent-primary) !important;
+        border-radius: 10px;
+    }
+    
+    .terminal-cursor {
+        display: inline-block;
+        width: 8px;
+        height: 16px;
+        background: var(--accent-primary);
+        animation: cursorBlink 1s step-end infinite;
+        margin-left: 2px;
+        vertical-align: middle;
     }
     
     @keyframes shimmer {
@@ -604,137 +670,132 @@ tab1, tab2, tab3 = st.tabs([
 # ════════════════════════════════════════════════════════════════════════════════
 #                          TAB 1: PRESELECTION ANALYSIS
 # ════════════════════════════════════════════════════════════════════════════════
-with tab1:
-    st.markdown("""
-    <div class="section-header">
-        <div class="section-icon">📁</div>
-        <div>
-            <h3 class="section-title">Data Configuration</h3>
-            <p class="section-desc">Configure your signal and background input files</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Signal Files Section
-    with st.container():
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            st.markdown("""
-            <div class="custom-card">
-                <div class="card-header">
-                    <span style="font-size: 1.2rem;">⚡</span>
-                    <h4 class="card-title">Signal Files</h4>
-                </div>
-            """, unsafe_allow_html=True)
+
+ #   st.markdown("""
+ #   <div class="section-header">
+ #    </div>
+#    """, unsafe_allow_html=True)
+#    
+#    # Signal Files Section
+#    with st.container():
+#        col1, col2 = st.columns([1, 1])
+#        
+#        with col1:
+#            st.markdown("""
+#            <div class="custom-card">
+#                <div class="card-header">
+#                    <span style="font-size: 1.2rem;">⚡</span>
+#                    <h4 class="card-title">Signal Files</h4>
+#                </div>
+#            """, unsafe_allow_html=True)
+ #           
+ #           num_sig = st.number_input(
+ #               label="Number of signal types",
+#                min_value=1,
+#                max_value=100,
+#                step=1,
+#                value=1,
+#                key="num_signals",
+#                help="Specify the number of different signal samples"
+#            )
+ #           
+ #           st.markdown("</div>", unsafe_allow_html=True)
+ #           
+ #           sig_dirs = ['sig_' + str(i) for i in range(int(num_sig))]
+ #           sigma_sig = []
+ #           
+ #           for i, item in enumerate(sig_dirs):
+ #               with st.expander(f"📂 Signal {i+1} Configuration", expanded=(i==0)):
+ #                   sig_dirs[i] = st.text_input(
+ #                       label=f"Path to signal-{i+1} directory",
+ #                       placeholder=f"/path/to/signal_{i+1}/files",
+ #                       key=item
+ #                   )
+ #                   sigma_1 = st.number_input(
+ #                       label=f"Cross section (pb)",
+ #                       min_value=1.0e-08,
+ #                       step=1.0e-08,
+ #                       format="%.8f",
+ #                       value=1.0,
+ #                       key=f"sigma_sig_{i}",
+ #                       help="Cross section value in picobarns"
+ #                   )
+ #                   sigma_sig.append(sigma_1)
+ #       
+ #       with col2:
+ #           st.markdown("""
+ #           <div class="custom-card">
+ #               <div class="card-header">
+ #                   <span style="font-size: 1.2rem;">🌫️</span>
+ #                   <h4 class="card-title">Background Files</h4>
+ #               </div>
+ #           """, unsafe_allow_html=True)
+ #           
+ #           num_bkg = st.number_input(
+  #              label="Number of background types",
+ #               min_value=1,
+ #               max_value=100,
+ #               step=1,
+ #               value=1,
+ #               key="num_backgrounds",
+ #               help="Specify the number of different background samples"
+ #           )
+  #          
+ #           st.markdown("</div>", unsafe_allow_html=True)
+ #           
+ #           bkg_dirs = ['bkg_' + str(i) for i in range(int(num_bkg))]
+#            sigma_bkg = []
             
-            num_sig = st.number_input(
-                label="Number of signal types",
-                min_value=1,
-                max_value=100,
-                step=1,
-                value=1,
-                key="num_signals",
-                help="Specify the number of different signal samples"
-            )
-            
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            sig_dirs = ['sig_' + str(i) for i in range(int(num_sig))]
-            sigma_sig = []
-            
-            for i, item in enumerate(sig_dirs):
-                with st.expander(f"📂 Signal {i+1} Configuration", expanded=(i==0)):
-                    sig_dirs[i] = st.text_input(
-                        label=f"Path to signal-{i+1} directory",
-                        placeholder=f"/path/to/signal_{i+1}/files",
-                        key=item
-                    )
-                    sigma_1 = st.number_input(
-                        label=f"Cross section (pb)",
-                        min_value=1.0e-08,
-                        step=1.0e-08,
-                        format="%.8f",
-                        value=1.0,
-                        key=f"sigma_sig_{i}",
-                        help="Cross section value in picobarns"
-                    )
-                    sigma_sig.append(sigma_1)
-        
-        with col2:
-            st.markdown("""
-            <div class="custom-card">
-                <div class="card-header">
-                    <span style="font-size: 1.2rem;">🌫️</span>
-                    <h4 class="card-title">Background Files</h4>
-                </div>
-            """, unsafe_allow_html=True)
-            
-            num_bkg = st.number_input(
-                label="Number of background types",
-                min_value=1,
-                max_value=100,
-                step=1,
-                value=1,
-                key="num_backgrounds",
-                help="Specify the number of different background samples"
-            )
-            
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            bkg_dirs = ['bkg_' + str(i) for i in range(int(num_bkg))]
-            sigma_bkg = []
-            
-            for i, item in enumerate(bkg_dirs):
-                with st.expander(f"📂 Background {i+1} Configuration", expanded=(i==0)):
-                    bkg_dirs[i] = st.text_input(
-                        label=f"Path to background-{i+1} directory",
-                        placeholder=f"/path/to/background_{i+1}/files",
-                        key=item
-                    )
-                    sigma_ = st.number_input(
-                        label=f"Cross section (pb)",
-                        min_value=1.0e-08,
-                        step=1.0e-08,
-                        format="%.8f",
-                        value=1.0,
-                        key=f"sigma_bkg_{i}",
-                        help="Cross section value in picobarns"
-                    )
-                    sigma_bkg.append(sigma_)
+#            for i, item in enumerate(bkg_dirs):
+#                with st.expander(f"📂 Background {i+1} Configuration", expanded=(i==0)):
+#                    bkg_dirs[i] = st.text_input(
+#                        label=f"Path to background-{i+1} directory",
+ #                       placeholder=f"/path/to/background_{i+1}/files",
+ #                       key=item
+ #                   )
+ #                   sigma_ = st.number_input(
+ #                       label=f"Cross section (pb)",
+ #                       min_value=1.0e-08,
+ #                       step=1.0e-08,
+ #                       format="%.8f",
+ #                       value=1.0,
+ #                       key=f"sigma_bkg_{i}",
+ #                       help="Cross section value in picobarns"
+ #                   )
+ #                   sigma_bkg.append(sigma_)
     
     # File Validation
-    st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
+  #  st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
     
-    col_val1, col_val2, col_val3 = st.columns([1, 1, 2])
-    with col_val1:
-        check_files = st.button("✅ Validate Files", use_container_width=True)
-    
-    if check_files:
-        with st.spinner("Validating file paths..."):
-            time.sleep(0.5)
-            all_valid = True
-            
-            for path_ in sig_dirs:
-                if path_ and not os.path.exists(path_):
-                    st.error(f"❌ Signal path not found: `{path_}`")
-                    all_valid = False
-                elif path_:
-                    st.success(f"✅ Signal files verified: `{path_}`")
-            
-            for path_ in bkg_dirs:
-                if path_ and not os.path.exists(path_):
-                    st.error(f"❌ Background path not found: `{path_}`")
-                    all_valid = False
-                elif path_:
-                    st.success(f"✅ Background files verified: `{path_}`")
-    
+ #   col_val1, col_val2, col_val3 = st.columns([1, 1, 2])
+ #   with col_val1:
+ #       check_files = st.button("✅ Validate Files", use_container_width=True)
+ #   
+ #   if check_files:
+#        with st.spinner("Validating file paths..."):
+#            time.sleep(0.5)
+#            all_valid = True
+#            
+#            for path_ in sig_dirs:
+#                if path_ and not os.path.exists(path_):
+#                    st.error(f"❌ Signal path not found: `{path_}`")
+#                    all_valid = False
+#                elif path_:
+#                    st.success(f"✅ Signal files verified: `{path_}`")
+ #           
+#            for path_ in bkg_dirs:
+ #               if path_ and not os.path.exists(path_):
+  #                  st.error(f"❌ Background path not found: `{path_}`")
+ #                   all_valid = False
+ #               elif path_:
+ #                   st.success(f"✅ Background files verified: `{path_}`")
+with tab1:    
     # LLM Code Generation Section
     st.markdown("""
     <div class="section-header">
         <div class="section-icon">🤖</div>
         <div>
-            <h3 class="section-title">LLM-Powered Analysis Generation</h3>
+            <h3 class="section-title">LLM  Analysis Generation</h3>
             <p class="section-desc">Describe your analysis in natural language</p>
         </div>
     </div>
@@ -754,8 +815,8 @@ with tab1:
         text = st.text_area(
             "Analysis Specification",
             value=template,
-            key="structured_text",
             height=350,
+            key="preselection_analysis_specification",
             help="Describe your analysis cuts, validation plots, and output format"
         )
         
@@ -763,7 +824,6 @@ with tab1:
         for h in HEADERS:
             if h not in text:
                 text = h + "\n\n" + text
-                st.session_state["structured_text"] = text
     
     with col_llm2:
         st.markdown("""
@@ -790,6 +850,103 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
     
+    # LLM Configuration Section
+    st.markdown("""
+    <div class="section-header">
+        <div class="section-icon">⚙️</div>
+        <div>
+            <h3 class="section-title">LLM Configuration</h3>
+            <p class="section-desc">Configure the language model and execution settings</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col_cfg1, col_cfg2 = st.columns(2)
+    
+    with col_cfg1:
+        st.markdown("""
+        <div class="custom-card">
+            <div class="card-header">
+                <span style="font-size: 1.2rem;">📂</span>
+                <h4 class="card-title">Paths Configuration</h4>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        output_dir = st.text_input(
+            "Output Directory",
+            value="Enter path to the ouput directory",
+            help="Directory where generated analysis and plots will be saved"
+        )
+        
+        input_file = st.text_input(
+            "Input LHCO File",
+            value="data/signal_1.lhco",
+            help="Path to the LHCO file for testing the generated analysis"
+        )
+        
+       # user_input = st.text_input(
+        #    "User Input Template",
+         #   value="/Users/hammad/work/CoLLM/templates/user_input_1.txt",
+          #  help="Path to save the user input template"
+       # )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    with col_cfg2:
+        st.markdown("""
+        <div class="custom-card">
+            <div class="card-header">
+                <span style="font-size: 1.2rem;">🤖</span>
+                <h4 class="card-title">Model Settings</h4>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        default_model = st.selectbox(
+            "LLM Model",
+            options=[
+          "Qwen/Qwen2.5-Coder-7B-Instruct",      # Best balance of speed/quality
+          "Qwen/Qwen2.5-Coder-32B-Instruct",     # Higher quality
+          "Qwen/Qwen3-Coder-30B-A3B-Instruct",   # Latest MoE coder
+         # General purpose (Good at code too)
+         "meta-llama/Llama-3.1-8B-Instruct",
+         "meta-llama/Llama-3.3-70B-Instruct",
+         "Qwen/Qwen2.5-72B-Instruct",
+   
+        # Lightweight/Fast options
+        "Qwen/Qwen2.5-Coder-3B-Instruct",
+       "meta-llama/Llama-3.2-3B-Instruct",
+       # Reasoning models (good for complex code)
+        "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+         "Qwen/QwQ-32B",         
+            ],
+            index=4,
+            help="Select the Hugging Face model for code generation"
+        )
+        
+        max_retries = st.number_input(
+            "Max Retries",
+            min_value=1,
+            max_value=10,
+            value=3,
+            help="Maximum number of attempts to fix generated code"
+        )
+        
+        use_api = st.checkbox(
+            "Use Hugging Face API",
+            value=False,
+            help="Use Hugging Face Inference API instead of local model. If not, LLM will be downloaded and decoded locally."
+        )
+        
+        api_key = st.text_input(
+            "API Key",
+            value="Enter Your API Key ",
+            type="password",
+            help="Your Hugging Face API key (required if using API)",
+            disabled=not use_api
+        )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+    
     st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
     
     col_run1, col_run2, col_run3 = st.columns([1, 1, 2])
@@ -797,25 +954,141 @@ with tab1:
     with col_run1:
         run_analysis = st.button("🚀 Run Preselection Analysis", use_container_width=True)
     
+    #with col_run2:
+     #   save_config = st.button("💾 Save Configuration", use_container_width=True)
+    
+     
     if run_analysis:
-        progress_text = "🔄 Running analysis pipeline..."
-        progress_bar = st.progress(0, text=progress_text)
+        # Convert text format from GUI to expected format
+        user_input_text = text.replace("### SELECTION CUTS", "[SELECTION_CUTS]")
+        user_input_text = user_input_text.replace("### PLOTS FOR VALIDATION", "[PLOTS_FOR_VALIDATION]")
+        user_input_text = user_input_text.replace("### OUTPUT STRUCTURE", "[OUTPUT_STRUCTURE]")
         
-        for percent_complete in range(100):
-            time.sleep(0.05)
-            if percent_complete < 30:
-                status = "📂 Loading files..."
-            elif percent_complete < 60:
-                status = "⚙️ Applying selection cuts..."
-            elif percent_complete < 90:
-                status = "📊 Generating validation plots..."
-            else:
-                status = "💾 Saving outputs..."
-            progress_bar.progress(percent_complete + 1, text=status)
+        st.markdown("""
+        <div class="section-header">
+            <div class="section-icon">📟</div>
+            <div>
+                <h3 class="section-title">Terminal Output</h3>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        time.sleep(0.5)
-        st.success("✨ Analysis completed successfully!")
-        st.balloons()
+        # Create a placeholder for terminal output
+        terminal_output = st.empty()
+        output_messages = []
+        
+        def update_terminal(message: str, status_type: str = 'info'):
+            """Callback to update terminal output."""
+            output_messages.append(message)
+            output_text = '\n'.join(output_messages)
+            escaped_output = html.escape(output_text)
+            
+            # Color based on status type
+            color_map = {
+                'info': '#10b981',
+                'success': '#22c55e', 
+                'warning': '#f59e0b',
+                'error': '#ef4444'
+            }
+            color = color_map.get(status_type, '#10b981')
+            
+            terminal_output.markdown(f"""
+            <div class="terminal-output" style="
+                background: #0a0a12;
+                padding: 1rem;
+                border-radius: 10px;
+                font-family: 'JetBrains Mono', monospace;
+                font-size: 0.85rem;
+                max-height: 400px;
+                overflow-y: auto;
+            ">
+                <pre style="margin: 0; color: {color}; white-space: pre-wrap;">{escaped_output}<span class="terminal-cursor"></span></pre>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with st.spinner("🔄 Running analysis pipeline..."):
+            status_placeholder = st.empty()
+            
+            try:
+                # Create a temporary Python script to run the analysis
+                
+                script_content = f'''
+import sys
+import os
+sys.path.insert(0, {repr(_project_root)})
+os.chdir({repr(_project_root)})
+
+from source.runs.run_preselection_GUI import run_LLM
+
+run_LLM(
+    {repr(output_dir)},
+    {repr(default_model)},
+    {repr(input_file)},
+    {repr(user_input_text)},
+    {repr(output_dir + "generated_lhco_analysis.py")},
+    {max_retries},
+    {use_api},
+    {repr(api_key)}
+)
+'''
+                
+                # Write the script to a temp file
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+                    f.write(script_content)
+                    temp_script = f.name
+                
+                # Run the script via subprocess and capture output in real-time
+                process = subprocess.Popen(
+                    [sys.executable, '-u', temp_script],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                    cwd=_project_root,
+                    env={**os.environ, 'PYTHONUNBUFFERED': '1'}
+                )
+                
+                # Stream output line by line
+                for line in iter(process.stdout.readline, ''):
+                    if line:
+                        line = line.rstrip('\n')
+                        update_terminal(line, 'info')
+                
+                process.wait()
+                
+                # Clean up temp file
+                try:
+                    os.unlink(temp_script)
+                except:
+                    pass
+                
+                if process.returncode == 0:
+                    update_terminal("Analysis completed successfully!", "success")
+                    status_placeholder.success("Analysis completed successfully!")
+                else:
+                    update_terminal(f"Process exited with code {process.returncode}", "error")
+                    status_placeholder.error("Analysis failed")
+                    
+            except Exception as e:
+                status_placeholder.error(f"❌ Error occurred: {e}")
+                st.error(f"Error running analysis: {e}")
+                import traceback
+                st.code(traceback.format_exc(), language="bash")
+            
+            # Display generated files if output directory exists
+            if os.path.exists(output_dir):
+                files = os.listdir(output_dir)
+                if files:
+                    st.markdown("### 📁 Generated Files")
+                    for f in files:
+                        file_path = os.path.join(output_dir, f)
+                        if f.endswith('.png'):
+                            st.image(file_path, caption=f)
+                        elif f.endswith('.py'):
+                            st.markdown(f"📄 **{f}**")
+                            with st.expander("View generated code"):
+                                with open(file_path, 'r') as code_file:
+                                    st.code(code_file.read(), language="python")
 
 # ════════════════════════════════════════════════════════════════════════════════
 #                          TAB 2: DEEP LEARNING
@@ -1177,7 +1450,7 @@ with tab3:
     st.markdown("""
     <div style="
         background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
-        border: 1px dashed #2a2a3a;
+        border: 1px dashed #3a3a4a;
         border-radius: 16px;
         padding: 4rem;
         text-align: center;
@@ -1202,7 +1475,7 @@ st.markdown("""
     text-align: center;
     padding: 2rem 0;
     margin-top: 3rem;
-    border-top: 1px solid #2a2a3a;
+    border-top: 1px solid #3a3a4a;
 ">
     <p style="color: #475569; font-size: 0.8rem;">
         Built  for the High Energy Physics community

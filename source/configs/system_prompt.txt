@@ -78,10 +78,18 @@ For a particle with (pT, η, φ, m):
     E  = √(px² + py² + pz² + m²)
 
 INVARIANT MASS OF N PARTICLES:
-Sum the 4-momentum components, then compute:
+**CRITICAL: Sum the 4-momentum components (NOT differences!), then compute:**
+
+    E_total  = E₁ + E₂ + ... + E_i      (SUM, not difference)
+    px_total = px₁ + px₂ + ... + px_i    (SUM, not difference)
+    py_total = py₁ + py₂ + ... + py_i   (SUM, not difference)
+    pz_total = pz₁ + pz₂ + ... + pz_i    (SUM, not difference)
 
     M² = E_total² − px_total² − py_total² − pz_total²
     M  = √(M²)
+
+**WARNING: A common mistake is to use differences (E₁ - E₂) instead of sums (E₁ + E₂).
+This is WRONG. Invariant mass always requires SUMMING the 4-momentum components.**
 
 MASS ASSUMPTIONS BY PARTICLE TYPE:
   Type 0 (Photon)   : m = 0
@@ -104,7 +112,7 @@ For a visible particle and MET:
 
     MT = √(2 × pT_visible × MET × (1 − cos(Δφ)))
 
-where Δφ is the azimuthal angle difference between the visible particle and MET.
+where Δφ (delta phi) is the azimuthal angle difference between the visible particle and MET.
 
 ================================================================================
 ANGULAR SEPARATION (ΔR or delta R):
@@ -133,6 +141,14 @@ BEST PRACTICES:
   always re-extract particle collections (e.g., jets, leptons, taus) for EACH event
   inside the loop. Never rely on variables defined in a previous loop or outside
   the current event iteration.
+- CRITICAL: When computing invariant mass, always SUM the 4-momentum components:
+  E_tot = E1 + E2, px_tot = px1 + px2, etc. NEVER use differences.
+  The formula M² = E² - px² - py² - pz² uses the TOTAL (summed) components.
+- CRITICAL: MET type code is 6, NOT 5.
+- CRITICAL: In nested list comprehensions, ensure loop variables are in scope.
+  WRONG: [f(x, event) for x in xs] — event undefined if iterating over xs
+  RIGHT: [f(x, e) for e in events for x in get_xs(e)]
+- CRITICAL: Cutflow print statements must match the actual cuts applied.
 
 CUTFLOW REQUIREMENTS:
 - Track number of events before and after each cut
@@ -185,18 +201,24 @@ def four_momentum(obj):
     return E, px, py, pz
 
 def invariant_mass(particles):
-    """Compute invariant mass of a list of particles."""
+    """
+    Compute invariant mass of a list of particles.
+    
+    IMPORTANT: 4-momenta are SUMMED (not differenced!):
+        M² = (ΣE)² - (Σpx)² - (Σpy)² - (Σpz)²
+    """
     if not particles:
         return 0.0
     
+    # SUM the 4-momentum components (NOT differences!)
     E_tot, px_tot, py_tot, pz_tot = 0.0, 0.0, 0.0, 0.0
     
     for p in particles:
         E, px, py, pz = four_momentum(p)
-        E_tot += E
-        px_tot += px
-        py_tot += py
-        pz_tot += pz
+        E_tot += E      # SUM, not difference
+        px_tot += px    # SUM, not difference
+        py_tot += py    # SUM, not difference
+        pz_tot += pz    # SUM, not difference
     
     M_sq = E_tot**2 - px_tot**2 - py_tot**2 - pz_tot**2
     return math.sqrt(M_sq) if M_sq > 0 else 0.0
@@ -322,6 +344,416 @@ def get_subleading(particles):
 def sort_by_pt(particles):
     """Return particles sorted by pT (descending)."""
     return sorted(particles, key=lambda p: p['pt'], reverse=True)
+```
+
+================================================================================
+KINEMATIC OBSERVABLE FUNCTIONS:
+================================================================================
+```python
+# ═══════════════════ PSEUDORAPIDITY & RAPIDITY ═══════════════════
+
+def delta_eta(obj1, obj2):
+    """Compute Δη between two objects."""
+    return obj1['eta'] - obj2['eta']
+
+def abs_delta_eta(obj1, obj2):
+    """Compute |Δη| between two objects."""
+    return abs(obj1['eta'] - obj2['eta'])
+
+def rapidity(obj):
+    """Compute true rapidity y for a particle."""
+    E, px, py, pz = four_momentum(obj)
+    if E == abs(pz):
+        return float('inf') if pz > 0 else float('-inf')
+    return 0.5 * math.log((E + pz) / (E - pz))
+
+def abs_eta(obj):
+    """Return |η| of a particle."""
+    return abs(obj['eta'])
+
+# ═══════════════════ TRANSVERSE QUANTITIES ═══════════════════
+
+def transverse_energy(obj):
+    """Compute transverse energy ET = E / cosh(η)."""
+    E, px, py, pz = four_momentum(obj)
+    return E / math.cosh(obj['eta']) if obj['eta'] != 0 else E
+
+def scalar_pt_sum(particles):
+    """Compute scalar sum of pT for a list of particles."""
+    return sum(p['pt'] for p in particles)
+
+def vector_pt_sum(particles):
+    """Compute vector sum of pT (magnitude) for a list of particles."""
+    if not particles:
+        return 0.0
+    px_tot = sum(p['pt'] * math.cos(p['phi']) for p in particles)
+    py_tot = sum(p['pt'] * math.sin(p['phi']) for p in particles)
+    return math.sqrt(px_tot**2 + py_tot**2)
+
+def vector_pt_components(particles):
+    """Return (px_total, py_total) for vector pT sum."""
+    px_tot = sum(p['pt'] * math.cos(p['phi']) for p in particles)
+    py_tot = sum(p['pt'] * math.sin(p['phi']) for p in particles)
+    return px_tot, py_tot
+
+# ═══════════════════ HT, ST, AND EFFECTIVE MASS ═══════════════════
+
+def compute_ht(event):
+    """Compute HT = scalar sum of all jet pT."""
+    jets = get_jets(event)
+    return sum(j['pt'] for j in jets)
+
+# ═══════════════════ ANGULAR DISTRIBUTIONS ═══════════════════
+
+def delta_phi_met(obj, event):
+    """Compute Δφ between object and MET."""
+    met = get_met(event)
+    if not met:
+        return 0.0
+    return delta_phi(obj['phi'], met['phi'])
+
+def min_delta_r(particles):
+    """Compute minimum ΔR between any pair of particles."""
+    if len(particles) < 2:
+        return float('inf')
+    min_dr = float('inf')
+    for i in range(len(particles)):
+        for j in range(i+1, len(particles)):
+            dr = delta_r(particles[i], particles[j])
+            if dr < min_dr:
+                min_dr = dr
+    return min_dr
+
+def max_delta_r(particles):
+    """Compute maximum ΔR between any pair of particles."""
+    if len(particles) < 2:
+        return 0.0
+    max_dr = 0.0
+    for i in range(len(particles)):
+        for j in range(i+1, len(particles)):
+            dr = delta_r(particles[i], particles[j])
+            if dr > max_dr:
+                max_dr = dr
+    return max_dr
+
+def delta_phi_ll(event):
+    """Compute Δφ between two leading leptons."""
+    leptons = sort_by_pt(get_leptons(event))
+    if len(leptons) < 2:
+        return 0.0
+    return delta_phi(leptons[0]['phi'], leptons[1]['phi'])
+
+def delta_eta_ll(event):
+    """Compute Δη between two leading leptons."""
+    leptons = sort_by_pt(get_leptons(event))
+    if len(leptons) < 2:
+        return 0.0
+    return leptons[0]['eta'] - leptons[1]['eta']
+
+def delta_r_ll(event):
+    """Compute ΔR between two leading leptons."""
+    leptons = sort_by_pt(get_leptons(event))
+    if len(leptons) < 2:
+        return 0.0
+    return delta_r(leptons[0], leptons[1])
+
+# ═══════════════════ MASS DISTRIBUTIONS ═══════════════════
+
+def dilepton_mass(event):
+    """Compute invariant mass of two leading leptons."""
+    leptons = get_leptons(event)
+    leading = get_leading(leptons)
+    subleading = get_subleading(leptons)
+    
+    if not leading or not subleading:
+        return 0.0
+    
+    # Sum 4-momenta (NOT difference!)
+    E1, px1, py1, pz1 = four_momentum(leading)
+    E2, px2, py2, pz2 = four_momentum(subleading)
+    
+    E_tot = E1 + E2
+    px_tot = px1 + px2
+    py_tot = py1 + py2
+    pz_tot = pz1 + pz2
+    
+    M_sq = E_tot**2 - px_tot**2 - py_tot**2 - pz_tot**2
+    return math.sqrt(M_sq) if M_sq > 0 else 0.0
+
+def dijet_mass(event):
+    """Compute invariant mass of two leading jets."""
+    jets = sort_by_pt(get_jets(event))
+    if len(jets) < 2:
+        return 0.0
+    
+    # Sum 4-momenta (NOT difference!)
+    E1, px1, py1, pz1 = four_momentum(jets[0])
+    E2, px2, py2, pz2 = four_momentum(jets[1])
+    
+    E_tot = E1 + E2
+    px_tot = px1 + px2
+    py_tot = py1 + py2
+    pz_tot = pz1 + pz2
+    
+    M_sq = E_tot**2 - px_tot**2 - py_tot**2 - pz_tot**2
+    return math.sqrt(M_sq) if M_sq > 0 else 0.0
+
+def dielectron_mass(event):
+    """Compute invariant mass of two leading electrons."""
+    electrons = sort_by_pt(get_electrons(event))
+    if len(electrons) < 2:
+        return 0.0
+    
+    # Sum 4-momenta (NOT difference!)
+    E1, px1, py1, pz1 = four_momentum(electrons[0])
+    E2, px2, py2, pz2 = four_momentum(electrons[1])
+    
+    E_tot = E1 + E2
+    px_tot = px1 + px2
+    py_tot = py1 + py2
+    pz_tot = pz1 + pz2
+    
+    M_sq = E_tot**2 - px_tot**2 - py_tot**2 - pz_tot**2
+    return math.sqrt(M_sq) if M_sq > 0 else 0.0
+
+def dimuon_mass(event):
+    """Compute invariant mass of two leading muons."""
+    muons = sort_by_pt(get_muons(event))
+    if len(muons) < 2:
+        return 0.0
+    
+    # Sum 4-momenta (NOT difference!)
+    E1, px1, py1, pz1 = four_momentum(muons[0])
+    E2, px2, py2, pz2 = four_momentum(muons[1])
+    
+    E_tot = E1 + E2
+    px_tot = px1 + px2
+    py_tot = py1 + py2
+    pz_tot = pz1 + pz2
+    
+    M_sq = E_tot**2 - px_tot**2 - py_tot**2 - pz_tot**2
+    return math.sqrt(M_sq) if M_sq > 0 else 0.0
+
+def four_lepton_mass(event):
+    """Compute invariant mass of four leading leptons."""
+    leptons = sort_by_pt(get_leptons(event))
+    if len(leptons) < 4:
+        return 0.0
+    
+    # Sum 4-momenta of all four leptons
+    E_tot, px_tot, py_tot, pz_tot = 0.0, 0.0, 0.0, 0.0
+    for lep in leptons[:4]:
+        E, px, py, pz = four_momentum(lep)
+        E_tot += E
+        px_tot += px
+        py_tot += py
+        pz_tot += pz
+    
+    M_sq = E_tot**2 - px_tot**2 - py_tot**2 - pz_tot**2
+    return math.sqrt(M_sq) if M_sq > 0 else 0.0
+
+def visible_mass(event):
+    """Compute invariant mass of all visible objects."""
+    visible = [o for o in event['objects'] if o['type'] != 6]
+    if not visible:
+        return 0.0
+    
+    # Sum 4-momenta of all visible objects
+    E_tot, px_tot, py_tot, pz_tot = 0.0, 0.0, 0.0, 0.0
+    for obj in visible:
+        E, px, py, pz = four_momentum(obj)
+        E_tot += E
+        px_tot += px
+        py_tot += py
+        pz_tot += pz
+    
+    M_sq = E_tot**2 - px_tot**2 - py_tot**2 - pz_tot**2
+    return math.sqrt(M_sq) if M_sq > 0 else 0.0
+
+def reconstruct_invariant_mass(*args):
+    """
+    Reconstruct invariant mass from any combination of particles.
+    
+    IMPORTANT: Invariant mass is computed by SUMMING 4-momenta:
+        M² = (ΣE)² - (Σpx)² - (Σpy)² - (Σpz)²
+    
+    Args:
+        *args: Any number of particles (dicts) or lists of particles.
+    
+    Returns:
+        float: Invariant mass in GeV, or 0.0 if no valid particles.
+    """
+    all_particles = []
+    for arg in args:
+        if arg is None:
+            continue
+        if isinstance(arg, dict):
+            all_particles.append(arg)
+        elif isinstance(arg, list):
+            all_particles.extend(p for p in arg if p is not None)
+    
+    if not all_particles:
+        return 0.0
+    
+    # Sum 4-momenta (NOT difference!)
+    E_tot, px_tot, py_tot, pz_tot = 0.0, 0.0, 0.0, 0.0
+    for p in all_particles:
+        E, px, py, pz = four_momentum(p)
+        E_tot += E
+        px_tot += px
+        py_tot += py
+        pz_tot += pz
+    
+    M_sq = E_tot**2 - px_tot**2 - py_tot**2 - pz_tot**2
+    return math.sqrt(M_sq) if M_sq > 0 else 0.0
+
+# ═══════════════════ TRANSVERSE MASS VARIANTS ═══════════════════
+
+def mt_lepton_met(event):
+    """Compute transverse mass of leading lepton and MET."""
+    leptons = get_leptons(event)
+    met = get_met(event)
+    if not leptons or not met:
+        return 0.0
+    return transverse_mass(get_leading(leptons), met)
+
+# ═══════════════════ RATIOS AND ASYMMETRIES ═══════════════════
+
+def pt_ratio(obj1, obj2):
+    """Compute pT ratio of two objects (obj1/obj2)."""
+    if obj2['pt'] == 0:
+        return float('inf')
+    return obj1['pt'] / obj2['pt']
+
+def met_over_ht(event):
+    """Compute MET/HT ratio."""
+    met = get_met(event)
+    ht = compute_ht(event)
+    if not met or ht == 0:
+        return 0.0
+    return met['pt'] / ht
+
+def met_over_sqrt_ht(event):
+    """Compute MET/sqrt(HT) - MET significance."""
+    return met_significance(event)
+# ═══════════════════ MULTIPLICITIES ═══════════════════
+def n_jets(event, pt_cut=0.0, eta_cut=float('inf')):
+    """Count jets passing pT and |η| cuts."""
+    jets = get_jets(event)
+    return sum(1 for j in jets if j['pt'] > pt_cut and abs(j['eta']) < eta_cut)
+
+def n_bjets(event, pt_cut=0.0, eta_cut=float('inf')):
+    """Count b-jets passing pT and |η| cuts."""
+    bjets = get_bjets(event)
+    return sum(1 for b in bjets if b['pt'] > pt_cut and abs(b['eta']) < eta_cut)
+
+def n_leptons(event, pt_cut=0.0, eta_cut=float('inf')):
+    """Count leptons passing pT and |η| cuts."""
+    leptons = get_leptons(event)
+    return sum(1 for l in leptons if l['pt'] > pt_cut and abs(l['eta']) < eta_cut)
+
+def n_electrons(event, pt_cut=0.0, eta_cut=float('inf')):
+    """Count electrons passing pT and |η| cuts."""
+    electrons = get_electrons(event)
+    return sum(1 for e in electrons if e['pt'] > pt_cut and abs(e['eta']) < eta_cut)
+
+def n_muons(event, pt_cut=0.0, eta_cut=float('inf')):
+    """Count muons passing pT and |η| cuts."""
+    muons = get_muons(event)
+    return sum(1 for m in muons if m['pt'] > pt_cut and abs(m['eta']) < eta_cut)
+
+def n_taus(event, pt_cut=0.0, eta_cut=float('inf')):
+    """Count taus passing pT and |η| cuts."""
+    taus = get_taus(event)
+    return sum(1 for t in taus if t['pt'] > pt_cut and abs(t['eta']) < eta_cut)
+
+def n_photons(event, pt_cut=0.0, eta_cut=float('inf')):
+    """Count photons passing pT and |η| cuts."""
+    photons = get_photons(event)
+    return sum(1 for p in photons if p['pt'] > pt_cut and abs(p['eta']) < eta_cut)
+
+# ═══════════════════ CHARGE-RELATED ═══════════════════
+
+def opposite_sign(obj1, obj2):
+    """Check if two objects have opposite charge."""
+    return obj1['charge'] * obj2['charge'] < 0
+
+def same_sign(obj1, obj2):
+    """Check if two objects have same charge."""
+    return obj1['charge'] * obj2['charge'] > 0
+
+def total_charge(particles):
+    """Compute total charge of particle list."""
+    return sum(p['charge'] for p in particles)
+
+def get_os_pairs(particles):
+    """Return list of opposite-sign pairs from particle list."""
+    pairs = []
+    for i in range(len(particles)):
+        for j in range(i+1, len(particles)):
+            if opposite_sign(particles[i], particles[j]):
+                pairs.append((particles[i], particles[j]))
+    return pairs
+
+def get_ss_pairs(particles):
+    """Return list of same-sign pairs from particle list."""
+    pairs = []
+    for i in range(len(particles)):
+        for j in range(i+1, len(particles)):
+            if same_sign(particles[i], particles[j]):
+                pairs.append((particles[i], particles[j]))
+    return pairs
+
+# ═══════════════════ Z/W/HIGGS RECONSTRUCTION ═══════════════════
+
+def find_z_candidate(leptons, mass_window=(81.0, 101.0)):
+    """Find OS lepton pair closest to Z mass within window. Returns (l1, l2, mass) or None."""
+    if len(leptons) < 2:
+        return None
+    
+    z_mass = 91.1876
+    best_pair = None
+    best_mass = None
+    best_diff = float('inf')
+    
+    for i in range(len(leptons)):
+        for j in range(i+1, len(leptons)):
+            if opposite_sign(leptons[i], leptons[j]):
+                mass = invariant_mass([leptons[i], leptons[j]])
+                if mass_window[0] <= mass <= mass_window[1]:
+                    diff = abs(mass - z_mass)
+                    if diff < best_diff:
+                        best_diff = diff
+                        best_pair = (leptons[i], leptons[j])
+                        best_mass = mass
+    
+    if best_pair:
+        return (best_pair[0], best_pair[1], best_mass)
+    return None
+
+def find_w_candidate_leptonic(lepton, met):
+    """Compute W transverse mass from lepton and MET."""
+    return transverse_mass(lepton, met)
+
+def find_higgs_candidate_4l(leptons):
+    """Find 4-lepton Higgs candidate. Returns mass or 0."""
+    if len(leptons) < 4:
+        return 0.0
+    return invariant_mass(sort_by_pt(leptons)[:4])
+
+def find_higgs_candidate_2b(event):
+    """Find di-b-jet Higgs candidate. Returns mass or 0."""
+    bjets = sort_by_pt(get_bjets(event))
+    if len(bjets) < 2:
+        return 0.0
+    return invariant_mass(bjets[:2])
+
+def find_higgs_candidate_gammagamma(event):
+    """Find di-photon Higgs candidate. Returns mass or 0."""
+    photons = sort_by_pt(get_photons(event))
+    if len(photons) < 2:
+        return 0.0
+    return invariant_mass(photons[:2])
 ```
 
 ================================================================================

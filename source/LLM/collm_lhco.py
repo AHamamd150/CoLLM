@@ -9,9 +9,16 @@
 Usage:
     from collm_lhco import generate_lhco_code
     
-    # Using local model
+    # Using local model with file path
     code = generate_lhco_code(
         user_input_path="user_input.txt",
+        output_path="generated_analysis.py",
+        model_id="Qwen/Qwen2.5-Coder-14B-Instruct"
+    )
+    
+    # Using local model with string input directly
+    code = generate_lhco_code(
+        user_input_text="[SELECTION_CUTS]\\n...",
         output_path="generated_analysis.py",
         model_id="Qwen/Qwen2.5-Coder-14B-Instruct"
     )
@@ -31,7 +38,7 @@ import sys
 import subprocess
 from pathlib import Path
 import re
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 
 # =========================
 # Minimal Dependency Loader
@@ -74,10 +81,10 @@ class Config:
     
     # Generation Parameters
     MAX_NEW_TOKENS = 4096
-    TEMPERATURE = 0.1
-    TOP_P = 0.95
-    TOP_K = 50
-    DO_SAMPLE = True
+    TEMPERATURE = 0.0
+    TOP_P = 1
+    TOP_K = 00
+    DO_SAMPLE = False
 
 # =========================
 # Utility Functions
@@ -157,6 +164,28 @@ def parse_user_input(path: Path) -> Tuple[str, str, str]:
     with open(path, "r", encoding="utf-8") as f:
         text = f.read()
 
+    def extract(tag):
+        pattern = rf"\[{tag}\](.*?)(?=\n\[|\Z)"
+        match = re.search(pattern, text, re.S)
+        return match.group(1).strip() if match else ""
+
+    selection_cuts = extract("SELECTION_CUTS")
+    plots_for_validation = extract("PLOTS_FOR_VALIDATION")
+    output_structure = extract("OUTPUT_STRUCTURE")
+
+    return selection_cuts, plots_for_validation, output_structure
+
+
+def parse_user_input_text(text: str) -> Tuple[str, str, str]:
+    """Parse user input text string and extract the three main sections.
+    
+    Args:
+        text: User input text containing [SELECTION_CUTS], [PLOTS_FOR_VALIDATION], 
+              and [OUTPUT_STRUCTURE] sections.
+    
+    Returns:
+        Tuple of (selection_cuts, plots_for_validation, output_structure)
+    """
     def extract(tag):
         pattern = rf"\[{tag}\](.*?)(?=\n\[|\Z)"
         match = re.search(pattern, text, re.S)
@@ -364,30 +393,48 @@ Output ONLY the Python code. Start with the shebang or imports. No explanations.
 # =========================
 # Main Function
 # =========================
-def generate_lhco_code(user_input_path: str, output_path: str, model_id: str = "Qwen/Qwen2.5-Coder-14B-Instruct",
-                       use_api: bool = False, api_key: str = None) -> str:
+def generate_lhco_code(
+    output_path: str,
+    model_id: str = "Qwen/Qwen2.5-Coder-14B-Instruct",
+    user_input_path: Optional[str] = None,
+    user_input_text: Optional[str] = None,
+    use_api: bool = False,
+    api_key: Optional[str] = None
+) -> Optional[str]:
     """
     Generate LHCO analysis code using LLM.
     
     Args:
-        user_input_path: Path to user input file
         output_path: Path to save generated code
         model_id: HuggingFace model ID
+        user_input_path: Path to user input file (optional if user_input_text is provided)
+        user_input_text: User input as string directly (optional if user_input_path is provided)
         use_api: If True, use Hugging Face Inference API instead of local model
         api_key: Hugging Face API key (required if use_api=True)
     
     Returns:
         Generated code string, or None if failed
+    
+    Note:
+        Either user_input_path or user_input_text must be provided.
+        If both are provided, user_input_text takes precedence.
     """
     if use_api and not api_key:
         raise ValueError("api_key is required when use_api=True")
     
-    user_input_path = Path(user_input_path)
+    if user_input_text is None and user_input_path is None:
+        raise ValueError("Either user_input_path or user_input_text must be provided")
+    
     output_path = Path(output_path)
     
-    # Load prompts
+    # Load system prompt
     system_prompt = load_text_file(Config.SYSTEM_PROMPT_PATH)
-    selection_cuts, plots_for_validation, output_structure = parse_user_input(user_input_path)
+    
+    if user_input_text is not None:
+        selection_cuts, plots_for_validation, output_structure = parse_user_input_text(user_input_text)
+    else:
+        user_input_path = Path(user_input_path)
+        selection_cuts, plots_for_validation, output_structure = parse_user_input(user_input_path)
 
     if use_api:
         # Use Hugging Face Inference API
@@ -424,3 +471,28 @@ def generate_lhco_code(user_input_path: str, output_path: str, model_id: str = "
     else:
         print("Failed to generate valid code")
         return None
+
+
+# =========================
+# Backward Compatibility
+# =========================
+# Keep old signature working for backward compatibility
+def generate_lhco_code_legacy(
+    user_input_path: str,
+    output_path: str,
+    model_id: str = "Qwen/Qwen2.5-Coder-14B-Instruct",
+    use_api: bool = False,
+    api_key: Optional[str] = None
+) -> Optional[str]:
+    """
+    Legacy function signature for backward compatibility.
+    
+    Deprecated: Use generate_lhco_code() with keyword arguments instead.
+    """
+    return generate_lhco_code(
+        output_path=output_path,
+        model_id=model_id,
+        user_input_path=user_input_path,
+        use_api=use_api,
+        api_key=api_key
+    )

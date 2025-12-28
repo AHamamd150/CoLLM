@@ -9,26 +9,10 @@ import os
 import shutil
 import warnings
 warnings.filterwarnings("ignore", message="To copy construct from a tensor")
-##=============================##
-##=============================##
-''' 
-This is the main code that runs the LLM analysis to generate the analysis code.
-
-*** Do we need to separate the analysis validation from the actual run over the signal and background?
-I think at the moment, we can ask the user to run the given script over  the signal and background events.
-'''
-'''
-QualityNotesQwen/Qwen2.5-Coder-32B-Instruct       32B     ~48GB    ⭐⭐⭐⭐⭐      Best Qwen, needs large GPU 
-deepseek-ai/DeepSeek-Coder-V2-Instruct            236B    ~40GB    ⭐⭐⭐⭐⭐      Often best for code
-deepseek-ai/deepseek-coder-33b-instruct           33B     ~48GB    ⭐⭐⭐⭐⭐      Excellent for fixing
-Qwen/Qwen2.5-Coder-14B-Instruct                   14B     ~20GB    ⭐⭐⭐⭐        Good balance
-deepseek-ai/deepseek-coder-6.7b-instruct          6.7B    ~10GB    ⭐⭐⭐⭐        Best small model
-Qwen/Qwen2.5-Coder-7B-Instruct                    7B      ~10GB    ⭐⭐⭐          Decentcode
-llama/CodeLlama-13b-Instruct-hf                   13B     ~18GB    ⭐⭐⭐          Older, less capable
-'''
 ##=============================
 # Configs 
 ##=============================
+
 config_path = None
 if len(sys.argv) > 1:
     config_path = sys.argv[1]
@@ -56,14 +40,18 @@ def run_and_capture_error(script_path: str, *args, output_dir: str = None) -> st
 
 def run_LLM(output_dir: str, DEFAULT_MODEL: str, input_test: str, input_user: str, output_code: str, MAX_RETRIES: int, use_api: bool, api_key: str):
     
-    ##=======================================================================
+    ##==========================================
     # suppress the plt.show() if exist in the generated code
-    ##=======================================================================
+    ##==========================================
     env = os.environ.copy()
     env['MPLBACKEND'] = 'Agg'
     ##================================
-
-    generate_lhco_code(user_input_path= input_user,output_path= output_code, model_id= DEFAULT_MODEL, use_api=use_api, api_key=api_key)
+    ensure_packages()
+    
+    output_code = output_dir + "generated_lhco_analysis.py"
+    recreate_dir(output_dir)
+    
+    generate_lhco_code(user_input_text = input_user,output_path= output_code, model_id= DEFAULT_MODEL, use_api=use_api, api_key=api_key)
     error = run_and_capture_error(output_code, input_test, output_dir=output_dir)
     retries = 0
 
@@ -82,7 +70,7 @@ def run_LLM(output_dir: str, DEFAULT_MODEL: str, input_test: str, input_user: st
        
         #  If fix failed, regenerate from scratch
         print("  Fix failed, regenerating...")
-        generate_lhco_code(user_input_path = input_user,output_path= output_code, model_id= DEFAULT_MODEL, use_api=use_api, api_key=api_key)
+        generate_lhco_code(user_input_text = input_user,output_path= output_code, model_id= DEFAULT_MODEL, use_api=use_api, api_key=api_key)
         error = run_and_capture_error(output_code, input_test, output_dir=output_dir)
     
         if not error:
@@ -102,16 +90,3 @@ def run_LLM(output_dir: str, DEFAULT_MODEL: str, input_test: str, input_user: st
         print(f"Analysis code is generated susccesfully. Output is stored in {output_dir}")
         subprocess.run([sys.executable, output_code, input_test], cwd=output_dir, env=env)
 
-
-if __name__ == "__main__":
-    #=======================================
-    # Ensure the core packages are installed
-    #=======================================
-    ensure_packages()
-    #===========================
-    
-    output_dir, DEFAULT_MODEL, MAX_RETRIES, input_test, input_user, use_api, api_key = read_conf(config_path)
-    output_code = output_dir + "generated_lhco_analysis.py"
-    recreate_dir(output_dir)
-    
-    run_LLM(output_dir, DEFAULT_MODEL, input_test, input_user, output_code, MAX_RETRIES, use_api, api_key)
