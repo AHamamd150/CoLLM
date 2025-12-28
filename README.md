@@ -65,24 +65,9 @@ conda activate collm
 
 ### Step 3: Install Dependencies
 
-CoLLM automatically installs required dependencies on first run. However, you can pre-install them:
+CoLLM automatically check and installs required dependencies on first run via the pip command. You don't have to install any package by yourself. 
 
-```bash
-# For NVIDIA GPU users (CUDA)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-
-# For Apple Silicon users (MPS)
-pip install torch torchvision torchaudio
-
-# For CPU-only
-pip install torch torchvision torchaudio
-
-# Install other dependencies
-pip install transformers accelerate huggingface-hub langchain langchain-huggingface
-pip install streamlit matplotlib numpy pyyaml tqdm pydantic
-```
-
-> **Note:** CoLLM requires NumPy < 2.0 for compatibility. The package manager will handle this automatically.
+> **Note:** CoLLM may requires NumPy < 2.0 for compatibility. The package manager will handle this automatically.
 
 ---
 
