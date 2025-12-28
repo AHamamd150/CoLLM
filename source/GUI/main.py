@@ -769,7 +769,7 @@ tab1, tab2, tab3 = st.tabs([
     
  #   col_val1, col_val2, col_val3 = st.columns([1, 1, 2])
  #   with col_val1:
- #       check_files = st.button("✅ Validate Files", use_container_width=True)
+ #       check_files = st.button(" Validate Files", use_container_width=True)
  #   
  #   if check_files:
 #        with st.spinner("Validating file paths..."):
@@ -778,17 +778,17 @@ tab1, tab2, tab3 = st.tabs([
 #            
 #            for path_ in sig_dirs:
 #                if path_ and not os.path.exists(path_):
-#                    st.error(f"❌ Signal path not found: `{path_}`")
+#                    st.error(f" Signal path not found: `{path_}`")
 #                    all_valid = False
 #                elif path_:
-#                    st.success(f"✅ Signal files verified: `{path_}`")
+#                    st.success(f" Signal files verified: `{path_}`")
  #           
 #            for path_ in bkg_dirs:
  #               if path_ and not os.path.exists(path_):
-  #                  st.error(f"❌ Background path not found: `{path_}`")
+  #                  st.error(f" Background path not found: `{path_}`")
  #                   all_valid = False
  #               elif path_:
- #                   st.success(f"✅ Background files verified: `{path_}`")
+ #                   st.success(f" Background files verified: `{path_}`")
 with tab1:    
     # LLM Code Generation Section
     st.markdown("""
@@ -873,13 +873,13 @@ with tab1:
         """, unsafe_allow_html=True)
         
         output_dir = st.text_input(
-            "Output Directory",
+            "Output Directory (Please enter the full path)",
             value="Enter path to the ouput directory",
             help="Directory where generated analysis and plots will be saved"
         )
         
         input_file = st.text_input(
-            "Input LHCO File",
+            "Input LHCO File (Please enter the full path)",
             value="data/signal_1.lhco",
             help="Path to the LHCO file for testing the generated analysis"
         )
