@@ -46,13 +46,6 @@
 
 ## 📦 Installation
 
-### Prerequisites
-
-- Python 3.11 or higher
-- Git
-- (Optional) NVIDIA GPU with CUDA for faster inference
-- (Optional) Apple Silicon Mac for MPS acceleration
-
 ### Step 1: Clone the Repository
 
 ```bash
@@ -315,55 +308,6 @@ flowchart LR
 
 ---
 
-## 🐛 Troubleshooting
-
-### Common Issues
-
-<details>
-<summary><b>🔴 CUDA Out of Memory</b></summary>
-
-Try a smaller model or enable 4-bit quantization (automatic on CUDA):
-
-```yaml
-DEFAULT_MODEL: "Qwen/Qwen2.5-Coder-7B-Instruct"
-```
-
-Or use the HuggingFace API instead.
-</details>
-
-<details>
-<summary><b>🔴 MPS Not Available on Mac</b></summary>
-
-Ensure you have:
-- macOS 12.3+ (for PyTorch 2.2.x) or macOS 14+ (for PyTorch 2.4+)
-- Apple Silicon (M1/M2/M3/M4)
-
-The package manager will automatically install the correct PyTorch version.
-</details>
-
-<details>
-<summary><b>🔴 NumPy Compatibility Error</b></summary>
-
-CoLLM requires NumPy < 2.0. Run:
-
-```bash
-pip install "numpy<2" --force-reinstall
-```
-
-Then restart Python.
-</details>
-
-<details>
-<summary><b>🔴 Generated Code Fails</b></summary>
-
-1. Increase `MAX_RETRIES` in your config
-2. Use a larger model for complex analyses
-3. Simplify your selection cuts
-4. Check that requested plots match available selections
-</details>
-
----
-
 ## 📚 LHCO File Format Reference
 
 | Column | Field | Description |
@@ -394,22 +338,9 @@ Then restart Python.
 - [x] Automatic code fixing and regeneration
 - [x] Streamlit GUI interface
 - [x] HuggingFace API support
-- [ ] ROOT file (Delphes TTree) support
 - [ ] ML training loop integration
 - [ ] Multi-file batch processing
 - [ ] Interactive prompt builder
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
 
 ---
 
@@ -417,10 +348,3 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
-
-<div align="center">
-
-**Built with ❤️ for the High Energy Physics community**
-
-</div>
