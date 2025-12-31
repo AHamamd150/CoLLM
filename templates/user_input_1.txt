@@ -25,6 +25,7 @@
 
 [OUTPUT_STRUCTURE]
 - print summary statistics and print the number of events before and after the selection cuts
+- save the generated histograms in png format
 - Each histogram is required to have 50 bins.
 - Write the title of the figures in symbols or LaTeX if applicable.
 - Normalize all the histograms to one.
