@@ -121,7 +121,13 @@ Api_key: "your_huggingface_api_key"  # Only needed if Use_api is True
 - Normalize all histograms to one
 
 [OUTPUT_STRUCTURE]
-- Print the number of events after each selection cut
+- Sve the produced histograms into png with dpi=150
+- print summary statistics and print the number of events before and after the selection cuts
+- save the following  in a single  csv file for MLP analysis:
+  1- pt of the leading letpton
+  2- pt of the leading tau leptons
+  3- delta R between the leading lepton and leading tau
+  4- delta eta between the leading and subleading b jets
 ```
 
 3. **Run the analysis**:
@@ -220,7 +226,12 @@ The analysis specification uses three sections:
 
 [OUTPUT_STRUCTURE]
 - Print cutflow table with event counts after each cut
-- Print final selection efficiency
+- Sve the produced histograms into png with dpi=150
+- save the following  in a single  csv file for MLP analysis:
+  1- pt of the leading letpton
+  2- pt of the leading tau leptons
+  3- delta R between the leading lepton and leading tau
+  4- delta eta between the leading and subleading b jets
 ```
 
 ### Supported LLM Models
