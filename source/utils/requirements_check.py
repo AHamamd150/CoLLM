@@ -59,6 +59,7 @@ def ensure_packages():
         # Core dependencies
         # Pin numpy<2 for compatibility with PyTorch/transformers compiled against NumPy 1.x
         "numpy":                 "numpy<2",
+        "pandas":                "pandas", 
         "matplotlib":            "matplotlib",
         "tqdm":                  "tqdm",
         "yaml":                  "pyyaml",
