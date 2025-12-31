@@ -18,11 +18,11 @@
 - Plot histogram delta R between leading electron and subleading b jet
 - Plot histogram delta eta between the leading and subleading b jets
 
+[OUTPUT_STRUCTURE]
+- print summary statistics and print the number of events before and after the selection cuts
+- print summary statistics and print the number of events before and after the selection cuts
 - Save the histograms in png format
 - Each histogram is required to have 50 bins.
 - Write the title of the figures in symbols or LaTeX if applicable.
 - Normalize each histogram to one
-
-[OUTPUT_STRUCTURE]
-- print summary statistics and print the number of events before and after the selection cuts
 
