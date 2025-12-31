@@ -813,7 +813,7 @@ with tab1:
     
     with col_llm1:
         text = st.text_area(
-            "Analysis Specification",
+            "Analysis Specification (Do not change the naming tag after ###.)",
             value=template,
             height=350,
             key="preselection_analysis_specification",
