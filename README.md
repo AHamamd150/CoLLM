@@ -2,8 +2,7 @@
 
 # CoLLM
 
-### An Automated, End-to-End Deep Learning Toolbox for Collider Physics Analysis
-
+### An automated, graphical user interface, end-to-end deep learning toolbox for collider analyse
 <img src="logo/logo.png" alt="CoLLM Logo" width="180"/>
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
