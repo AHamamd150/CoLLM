@@ -321,6 +321,10 @@ import math
 def generate_code(model, tokenizer, prompt: str) -> str:
     """Generate code using the model."""
     
+    torch.manual_seed(42)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(42)
+        
     inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192)
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
     
@@ -386,6 +390,7 @@ Output ONLY the Python code. Start with the shebang or imports. No explanations.
         max_tokens=Config.MAX_NEW_TOKENS,
         temperature=Config.TEMPERATURE,
         top_p=Config.TOP_P,
+        seed=42, 
     )
     
     return response.choices[0].message.content
