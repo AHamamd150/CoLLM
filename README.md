@@ -67,7 +67,7 @@
 ### Step 1: Clone the Repository
 
 ```bash
-git clone [https://github.com/yourusername/CoLLM.git](https://github.com/AHamamd150/CoLLM.git)
+git clone  https://github.com/yourusername/CoLLM.git
 cd CoLLM
 ```
 
