@@ -834,21 +834,19 @@ with tab1:
             </div>
             <div style="font-size: 0.8rem; color: #94a3b8; line-height: 1.7; font-family: 'JetBrains Mono', monospace;">
                 <p><strong style="color: #a855f7;">### SELECTION CUTS</strong></p>
-                <p>• Leptons: PT > 20 GeV, |Eta| < 2.4</p>
-                <p>• At least two leptons</p>
-                <p>• Require at least two b jets</p>
+                <p>- Require at least 2 jets with pT > 30 GeV </p>
+                <p>- Select MET > 30 GeV</p>
                 <br>
                 <p><strong style="color: #a855f7;">### PLOTS FOR VALIDATION</strong></p>
-                <p>• Dielectron mass: 60 bins, 60–120 GeV</p>
-                <p>• Plot the missing energy distribution</p>
+                <p>- Plot the MET distribution</p>
+                <p>- Plot delta R between the two leading jets</p>
                 <br>
                 <p><strong style="color: #a855f7;">### OUTPUT STRUCTURE</strong></p>
-                <p>• Save plots as PNG (150 dpi)</p>
-                <p>• print summary statistics </p>
-                 <p>• save the following  in a single  csv file for MLP analysis: </p>
-                 <p>1- pt of the leading letpton </p>
-                 <p>2- pt of the leading jet </p>
-                 <p>3- delta R between the leading  and subleading b jet </p>
+                <p>- Save plots in png format</p>
+                <p>- print summary statistics </p>
+                 <p>- save the following  in a single  csv file for MLP analysis: </p>
+                 <p>1- Transverse mass of lepton + MET </p>
+                 <p>2- Delta R between the two jets </p>
             </div>
         </div>
         """, unsafe_allow_html=True)
