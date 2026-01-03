@@ -7,7 +7,7 @@
 - Require exactly 1 lepton (electron or muon)
 - Require at least 2 jets with pT > 30 GeV and |eta| < 2.5
 - Select MET > 30 GeV
-- Veto events with b-tagged jets (to suppress top background)
+- Veto events with b-tagged jets 
 - Select transverse mass of lepton + MET between 40 and 120 GeV (W leptonic candidate)
 - Select invariant mass of the two leading jets between 60 and 100 GeV (W hadronic candidate)
 - Select delta R between the two leading jets < 3.0
