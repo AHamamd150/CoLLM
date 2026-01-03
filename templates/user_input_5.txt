@@ -1,1 +1,32 @@
+# Physics Process: p p > H j j, H > ta+ ta-
+# =========================================
 
+[SELECTION_CUTS]
+- Select taus with pT > 20 GeV and |eta| < 2.3
+- Select jets with pT > 30 GeV and |eta| < 4.7
+- Require at least 2 taus
+- Require at least 2 jets (VBF topology)
+- Require opposite-sign tau pair
+- Select invariant mass of the leading and subleading jets (m_jj) > 400 GeV
+- Select |delta eta| between the two leading jets > 2.5
+- Select ditau invariant mass between 60 and 150 GeV
+- Veto events with b-tagged jets
+
+[PLOTS_FOR_VALIDATION]
+- Plot the following as histograms:
+1 Plot the ditau invariant mass in the range 50 to 160 GeV
+2 Plot the dijet invariant mass (m_jj) in the range 200 to 2000 GeV
+3 Plot delta eta between the two leading jets
+4 Plot the pT of the leading tau
+5 Plot the pT of the subleading tau
+6 Plot the pT of the leading jet
+7 Plot the pT of the subleading jet
+8 Plot delta R between the two taus
+9 Plot the MET distribution
+10 Plot delta phi between the ditau system and the dijet system
+11 Plot the centrality of the ditau system relative to the two jets
+
+
+[OUTPUT_STRUCTURE]
+- Print detailed cutflow showing efficiency of each cut
+- Save the plots in png format
