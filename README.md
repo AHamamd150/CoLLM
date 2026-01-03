@@ -36,6 +36,7 @@
   - [User Input File Format](#user-input-file-format)
   - [Example Configuration](#example-configuration)
   - [Supported LLM Models](#supported-llm-models)
+- [ Physics Analysis Templates](#-physics-analysis-templates)
 - [ Usage](#-usage)
   - [Using the HuggingFace API](#using-the-huggingface-api)
   - [Programmatic Usage](#programmatic-usage)
@@ -179,9 +180,12 @@ CoLLM/
 │       └── read_configs.py          # Configuration parser
 │
 ├── 📂 templates/                # User input templates
-│   ├── user_input.txt           # Example analysis specification
-│   ├── user_input_1.txt         # Additional example
-│   └── user_input_2.txt         # Additional example
+│   ├── user_input.txt           # Basic analysis example
+│   ├── user_input_1.txt         # WW semi-leptonic analysis
+│   ├── user_input_2.txt         # tt̄ semi-leptonic analysis
+│   ├── user_input_3.txt         # H→γγ diphoton analysis
+│   ├── user_input_4.txt         # WZ tri-lepton analysis
+│   └── user_input_5.txt         # H→ττ VBF analysis
 │
 ├── 📂 data/                     # Sample LHCO data files
 │   ├── signal.lhco              # Example signal events
@@ -242,6 +246,157 @@ The analysis specification uses three sections:
 | `Qwen/Qwen2.5-Coder-14B-Instruct` | 14B | ~20GB | ⭐⭐⭐⭐ |
 | `deepseek-ai/deepseek-coder-6.7b-instruct` | 6.7B | ~10GB | ⭐⭐⭐⭐ |
 | `Qwen/Qwen2.5-Coder-7B-Instruct` | 7B | ~10GB | ⭐⭐⭐ |
+
+---
+
+## 🧪 Physics Analysis Templates
+
+The `templates/` folder contains ready-to-use analysis configurations covering a variety of Standard Model processes. These templates demonstrate different physics signatures and analysis techniques.
+
+### Template Overview
+
+| Template | Physics Process | Key Signatures |
+|----------|----------------|----------------|
+| `user_input_1.txt` | WW → ℓν jj | Single lepton, MET, dijet W reconstruction |
+| `user_input_2.txt` | tt̄ → bℓν bjj | Single lepton, b-jets, top reconstruction |
+| `user_input_3.txt` | H → γγ | Diphoton, mass window cuts |
+| `user_input_4.txt` | WZ → 3ℓν | Tri-lepton, Z mass window, MET |
+| `user_input_5.txt` | H → ττ (VBF) | Tau pairs, VBF jet topology |
+
+---
+
+### 📄 Template 1: WW Semi-Leptonic (`user_input_1.txt`)
+
+**Process:** `p p → W⁺ W⁻, W⁺ → ℓ⁺ ν, W⁻ → j j`
+
+A classic diboson analysis with one W decaying leptonically and one hadronically.
+
+**Key Features:**
+- Single isolated lepton (electron or muon)
+- Large missing transverse energy (MET) from neutrino
+- Dijet invariant mass reconstruction for hadronic W (~80 GeV)
+- Transverse mass reconstruction for leptonic W
+- b-jet veto to suppress tt̄ background
+
+**Selection Highlights:**
+```
+- Require exactly 1 lepton with pT > 25 GeV
+- Require at least 2 jets with pT > 30 GeV
+- Select MET > 30 GeV
+- Veto b-tagged jets
+- Select dijet invariant mass between 60-100 GeV
+```
+
+---
+
+### 📄 Template 2: tt̄ Semi-Leptonic (`user_input_2.txt`)
+
+**Process:** `p p → t t̄, t → b W⁺ → b ℓ⁺ ν, t̄ → b̄ W⁻ → b̄ j j`
+
+The workhorse top quark pair production analysis in the lepton+jets channel.
+
+**Key Features:**
+- Single isolated lepton + MET (leptonic top)
+- At least 4 jets including 2 b-tagged jets
+- Hadronic W and top mass reconstruction
+- HT (scalar sum of jet pT) distribution
+
+**Selection Highlights:**
+```
+- Require exactly 1 lepton with pT > 25 GeV
+- Require at least 4 jets with pT > 30 GeV
+- Require at least 2 b-tagged jets
+- Select MET > 20 GeV
+- Select transverse mass (lepton+MET) between 30-150 GeV
+```
+
+---
+
+### 📄 Template 3: H → γγ Diphoton (`user_input_3.txt`)
+
+**Process:** `p p → H → γ γ`
+
+The golden discovery channel for the Higgs boson with clean diphoton signature.
+
+**Key Features:**
+- Two high-pT isolated photons
+- Diphoton invariant mass peak at ~125 GeV
+- pT/mγγ ratio cuts for background rejection
+- Crack region veto (detector gaps)
+
+**Selection Highlights:**
+```
+- Require at least 2 photons with pT > 25 GeV
+- Leading photon pT > 35 GeV
+- Exclude crack region: 1.37 < |η| < 1.52
+- Select diphoton mass between 105-160 GeV
+- Apply pT/mγγ > 0.35 (leading), > 0.25 (subleading)
+```
+
+---
+
+### 📄 Template 4: WZ Tri-Lepton (`user_input_4.txt`)
+
+**Process:** `p p → W Z, W → ℓ ν, Z → ℓ⁺ ℓ⁻`
+
+Diboson production with a clean three-lepton final state.
+
+**Key Features:**
+- Exactly 3 isolated leptons
+- Opposite-sign same-flavor (OSSF) pair for Z reconstruction
+- Z mass window selection (76-106 GeV)
+- Third lepton + MET for W transverse mass
+- Low background, high purity signature
+
+**Selection Highlights:**
+```
+- Require exactly 3 leptons
+- Require OSSF pair with mass between 76-106 GeV (Z candidate)
+- Select MET > 30 GeV
+- Third lepton (W candidate) pT > 20 GeV
+- Select W transverse mass > 30 GeV
+```
+
+---
+
+### 📄 Template 5: H → ττ VBF (`user_input_5.txt`)
+
+**Process:** `p p → H j j, H → τ⁺ τ⁻` (Vector Boson Fusion)
+
+Higgs production via VBF with characteristic forward jet topology.
+
+**Key Features:**
+- Opposite-sign tau pair from Higgs decay
+- Two forward jets with large rapidity gap (VBF signature)
+- High dijet invariant mass (mjj > 400 GeV)
+- Large Δη between VBF jets (> 2.5)
+- b-jet veto to suppress tt̄ background
+- Tau pair centrality between VBF jets
+
+**Selection Highlights:**
+```
+- Require at least 2 taus with pT > 20 GeV
+- Require at least 2 jets with pT > 30 GeV
+- Require opposite-sign tau pair
+- Select dijet mass mjj > 400 GeV
+- Select |Δη(j1,j2)| > 2.5
+- Veto b-tagged jets
+- Select ditau mass between 60-150 GeV
+```
+
+---
+
+### Physics Coverage Summary
+
+These templates collectively demonstrate analysis techniques for:
+
+| Category | Features Covered |
+|----------|-----------------|
+| **Particle Types** | Electrons, muons, taus, photons, jets, b-jets, MET |
+| **Observables** | Invariant mass, transverse mass, pT, η, φ, ΔR, Δη, Δφ |
+| **Reconstructed Objects** | W (leptonic & hadronic), Z, Higgs, top quark |
+| **Selection Techniques** | OSSF pairs, b-tagging, VBF topology, mass windows, vetoes |
+| **Signatures** | Single lepton, dilepton, tri-lepton, diphoton, tau pairs |
 
 ---
 
@@ -352,6 +507,7 @@ flowchart LR
 - [x] Automatic code fixing and regeneration
 - [x] Streamlit GUI interface
 - [x] HuggingFace API support
+- [x] Comprehensive physics analysis templates
 - [ ] ML training loop integration
 - [ ] Multi-file batch processing
 - [ ] Interactive prompt builder
