@@ -28,6 +28,7 @@
 
 [OUTPUT_STRUCTURE]
 - Print cutflow with event counts at each stage
+- save the figures in png format
 - Save to CSV for MLP analysis:
   1- Diphoton invariant mass
   2- Leading photon pT
