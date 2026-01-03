@@ -1,0 +1,37 @@
+# Physics Process: p p > H, H > gamma gamma
+# ==========================================
+
+[SELECTION_CUTS]
+- Select photons with pT > 25 GeV and |eta| < 2.37
+- Exclude photons in the crack region 1.37 < |eta| < 1.52
+- Require at least 2 photons
+- Leading photon pT > 35 GeV
+- Subleading photon pT > 25 GeV
+- Select pT/m_gammagamma > 0.35 for leading photon
+- Select pT/m_gammagamma > 0.25 for subleading photon
+- Select diphoton invariant mass between 105 and 160 GeV
+
+[PLOTS_FOR_VALIDATION]
+- Plot the following as histograms:
+1 Plot diphoton invariant mass in the range 100 to 160 GeV
+2 Plot pT of the leading photon
+3 Plot pT of the subleading photon
+4 Plot pT of the diphoton system
+5 Plot eta of the leading photon
+6 Plot eta of the subleading photon
+7 Plot delta R between the two photons
+8 Plot delta phi between the two photons
+9 Plot the |cos(theta*)| of the diphoton system in Collins-Soper frame
+
+- Each histogram should have 50 bins.
+- Write axis labels in LaTeX (e.g., $m_{\gamma\gamma}$, $p_T^{\gamma}$).
+
+[OUTPUT_STRUCTURE]
+- Print cutflow with event counts at each stage
+- Save to CSV for MLP analysis:
+  1- Diphoton invariant mass
+  2- Leading photon pT
+  3- Subleading photon pT
+  4- Delta R between photons
+  5- pT of diphoton system
+  6- |cos(theta*)|
