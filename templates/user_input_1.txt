@@ -27,7 +27,7 @@
 
 - Each histogram should have 40 bins.
 - Use LaTeX notation for axis labels where applicable.
-- Normalize all histograms to unity.
+- Normalize all histograms to unity (density=True).
 
 [OUTPUT_STRUCTURE]
 - Print cutflow showing number of events after each selection
