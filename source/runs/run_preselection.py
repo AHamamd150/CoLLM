@@ -111,7 +111,7 @@ if __name__ == "__main__":
     #===========================
     
     output_dir, DEFAULT_MODEL, MAX_RETRIES, input_test, input_user, use_api, api_key = read_conf(config_path)
-    output_code = output_dir + "generated_lhco_analysis.py"
+    output_code = output_dir + "/generated_lhco_analysis.py"
     recreate_dir(output_dir)
     
     run_LLM(output_dir, DEFAULT_MODEL, input_test, input_user, output_code, MAX_RETRIES, use_api, api_key)

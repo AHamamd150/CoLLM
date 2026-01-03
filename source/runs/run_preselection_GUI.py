@@ -48,7 +48,7 @@ def run_LLM(output_dir: str, DEFAULT_MODEL: str, input_test: str, input_user: st
     ##================================
     ensure_packages()
     
-    output_code = output_dir + "generated_lhco_analysis.py"
+    output_code = output_dir + "/generated_lhco_analysis.py"
     recreate_dir(output_dir)
     
     generate_lhco_code(user_input_text = input_user,output_path= output_code, model_id= DEFAULT_MODEL, use_api=use_api, api_key=api_key)

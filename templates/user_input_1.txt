@@ -1,37 +1,41 @@
-# Physics Process: p p > Z Z Z, Z > ta- ta+, Z > b b~, Z > l- l+
-# ==============================================================
+# Physics Process: p p > W+ W-, W+ > l+ nu, W- > j j
+# ================================================================
 
 [SELECTION_CUTS]
-- Select electrons with pT > 10 GeV and |eta| < 2.5
-- Select muons with pT > 10 GeV and |eta| < 2.4
-- Requires at least two leptons
-- Requires at least two taus  
-- Requires at least two b  jets
-- Select invariant mass of the leading and second leading leptons between 10 and 300
-- Select angular separation between the leading tau and second leading b jet > 0.1 
+- Select electrons with pT > 25 GeV and |eta| < 2.5
+- Select muons with pT > 20 GeV and |eta| < 2.4
+- Require exactly 1 lepton (electron or muon)
+- Require at least 2 jets with pT > 30 GeV and |eta| < 2.5
+- Select MET > 30 GeV
+- Veto events with b-tagged jets 
+- Select transverse mass of lepton + MET between 40 and 120 GeV (W leptonic candidate)
+- Select invariant mass of the two leading jets between 60 and 100 GeV (W hadronic candidate)
+- Select delta R between the two leading jets < 3.0
 
 [PLOTS_FOR_VALIDATION]
-- Plot the following with all plots are histograms:
-1 Plot the leading electron and subleading muon pT superimposed. Use different opacity for better visualization.
-2 Plot the missing energy distribution
-3 Plot the transverse momentum of the leading b jet
-4 Plot the eta of b jets
-5 plot the invariant mass of the leading and subleading  taus
-6 Plot the pT of the b jets
-7 Plot invariant mass of the leading and subleading b jets in the mass range between 10 and 150
-8 Plot invariant mass of the leading and subleading lepton in the mass range between 10 and 150
-9 Plot delta R between leading electron and subleading b jet
-10 delta eta between the leading and subleading b jets
+- Plot the following as histograms:
+1 Plot the transverse mass of lepton + MET (W leptonic) in the range 30 to 150 GeV
+2 Plot the invariant mass of the two leading jets (W hadronic) in the range 40 to 120 GeV
+3 Plot the MET distribution
+4 Plot the pT of the lepton
+5 Plot the pT of the leading jet
+6 Plot the pT of the subleading jet
+7 Plot delta R between the two leading jets
+8 Plot delta phi between the lepton and MET
+9 Plot the eta of the lepton
+10 Plot delta phi between the leptonic W and hadronic W candidates
 
-- Each histogram is required to have 50 bins.
-- Write the title of the figures in symbols or LaTeX if applicable.
-- Normalize all the histograms to one.
-
+- Each histogram should have 40 bins.
+- Use LaTeX notation for axis labels where applicable.
+- Normalize all histograms to unity (density=True).
 
 [OUTPUT_STRUCTURE]
-- print summary statistics and print the number of events before and after the selection cuts
-- save the following  in a single  csv file for MLP analysis:
-  1- pt of the leading letpton
-  2- pt of the leading tau leptons
-  3- delta R between the leading lepton and leading tau
-  4- delta eta between the leading and subleading b jets
+- Print cutflow showing number of events after each selection
+- Save the pltos in png format
+- Save the following in a CSV file for MLP analysis:
+  1- Transverse mass of lepton + MET
+  2- Dijet invariant mass
+  3- MET
+  4- pT of the lepton
+  5- Delta R between the two jets
+  6- Delta phi between leptonic and hadronic W systems
