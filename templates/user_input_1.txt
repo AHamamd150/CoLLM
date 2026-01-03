@@ -1,24 +1,29 @@
-# Physics Process: p p > H > Z Z, Z > l+ l-, Z > l+ l-
+# Physics Process: p p > W+ W-, W+ > l+ nu, W- > j j
 # ================================================================
 
 [SELECTION_CUTS]
-- Select electrons with pT > 7 GeV and |eta| < 2.47
-- Select muons with pT > 5 GeV and |eta| < 2.7
-- Require exactly 4 leptons (electrons or muons)
-- Require at least one opposite-sign same-flavor lepton pair with invariant mass between 50 and 106 GeV (Z1 candidate)
-- Require a second opposite-sign lepton pair with invariant mass between 12 and 115 GeV (Z2 candidate)
-- Select four-lepton invariant mass between 115 and 135 GeV
+- Select electrons with pT > 25 GeV and |eta| < 2.5
+- Select muons with pT > 20 GeV and |eta| < 2.4
+- Require exactly 1 lepton (electron or muon)
+- Require at least 2 jets with pT > 30 GeV and |eta| < 2.5
+- Select MET > 30 GeV
+- Veto events with b-tagged jets (to suppress top background)
+- Select transverse mass of lepton + MET between 40 and 120 GeV (W leptonic candidate)
+- Select invariant mass of the two leading jets between 60 and 100 GeV (W hadronic candidate)
+- Select delta R between the two leading jets < 3.0
 
 [PLOTS_FOR_VALIDATION]
 - Plot the following as histograms:
-1 Plot the four-lepton invariant mass (m_4l) in the range 100 to 150 GeV
-2 Plot the invariant mass of Z1 candidate (leading Z) in the range 50 to 110 GeV
-3 Plot the invariant mass of Z2 candidate (subleading Z) in the range 10 to 120 GeV
-4 Plot the pT of the leading lepton
-5 Plot the pT of the four-lepton system
-6 Plot delta R between the two leading leptons
-7 Plot the eta distribution of all selected leptons
-8 Plot the phi distribution of all selected leptons
+1 Plot the transverse mass of lepton + MET (W leptonic) in the range 30 to 150 GeV
+2 Plot the invariant mass of the two leading jets (W hadronic) in the range 40 to 120 GeV
+3 Plot the MET distribution
+4 Plot the pT of the lepton
+5 Plot the pT of the leading jet
+6 Plot the pT of the subleading jet
+7 Plot delta R between the two leading jets
+8 Plot delta phi between the lepton and MET
+9 Plot the eta of the lepton
+10 Plot delta phi between the leptonic W and hadronic W candidates
 
 - Each histogram should have 40 bins.
 - Use LaTeX notation for axis labels where applicable.
@@ -26,9 +31,11 @@
 
 [OUTPUT_STRUCTURE]
 - Print cutflow showing number of events after each selection
+- Save the pltos in png format
 - Save the following in a CSV file for MLP analysis:
-  1- Four-lepton invariant mass
-  2- Z1 candidate mass
-  3- Z2 candidate mass
-  4- pT of the leading lepton
-  5- delta R between the two Z candidates
+  1- Transverse mass of lepton + MET
+  2- Dijet invariant mass
+  3- MET
+  4- pT of the lepton
+  5- Delta R between the two jets
+  6- Delta phi between leptonic and hadronic W systems
