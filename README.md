@@ -54,12 +54,12 @@
 
 ### ✨ Key Features
 
-- ** LLM-Powered Code Generation** — Leverages state-of-the-art code models (Qwen, DeepSeek) to generate physics analysis code
-- ** Automatic Error Correction** — Self-healing code with automatic bug detection and fixing
-- ** Dual Interface** — Choose between Terminal UI (TUI) or Streamlit-based Graphical UI (GUI)
-- ** GPU Acceleration** — Full support for CUDA (NVIDIA) and MPS (Apple Silicon)
-- ** Built-in Validation** — Syntax checking and pattern validation before execution
-- ** API Support** — Use local models or HuggingFace Inference API
+- **LLM-Powered Code Generation** — Leverages state-of-the-art code models (Qwen, DeepSeek) to generate physics analysis code
+- **Automatic Error Correction** — Self-healing code with automatic bug detection and fixing
+- **Dual Interface** — Choose between Terminal UI (TUI) or Streamlit-based Graphical UI (GUI)
+- **GPU Acceleration** — Full support for CUDA (NVIDIA) and MPS (Apple Silicon)
+- **Built-in Validation** — Syntax checking and pattern validation before execution
+- **API Support** — Use local models or HuggingFace Inference API
 
 ---
 
