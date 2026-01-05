@@ -54,12 +54,12 @@
 
 ### ✨ Key Features
 
-- **🤖 LLM-Powered Code Generation** — Leverages state-of-the-art code models (Qwen, DeepSeek) to generate physics analysis code
-- **🔄 Automatic Error Correction** — Self-healing code with automatic bug detection and fixing
-- **🖥️ Dual Interface** — Choose between Terminal UI (TUI) or Streamlit-based Graphical UI (GUI)
-- **⚡ GPU Acceleration** — Full support for CUDA (NVIDIA) and MPS (Apple Silicon)
-- **📊 Built-in Validation** — Syntax checking and pattern validation before execution
-- **🔌 API Support** — Use local models or HuggingFace Inference API
+- ** LLM-Powered Code Generation** — Leverages state-of-the-art code models (Qwen, DeepSeek) to generate physics analysis code
+- ** Automatic Error Correction** — Self-healing code with automatic bug detection and fixing
+- ** Dual Interface** — Choose between Terminal UI (TUI) or Streamlit-based Graphical UI (GUI)
+- ** GPU Acceleration** — Full support for CUDA (NVIDIA) and MPS (Apple Silicon)
+- ** Built-in Validation** — Syntax checking and pattern validation before execution
+- ** API Support** — Use local models or HuggingFace Inference API
 
 ---
 
@@ -249,7 +249,7 @@ The analysis specification uses three sections:
 
 ---
 
-## 🧪 Physics Analysis Templates
+##  Physics Analysis Templates
 
 The `templates/` folder contains ready-to-use analysis configurations covering a variety of Standard Model processes. These templates demonstrate different physics signatures and analysis techniques.
 
@@ -265,7 +265,7 @@ The `templates/` folder contains ready-to-use analysis configurations covering a
 
 ---
 
-### 📄 Template 1: WW Semi-Leptonic (`user_input_1.txt`)
+###  Template 1: WW Semi-Leptonic (`user_input_1.txt`)
 
 **Process:** `p p → W⁺ W⁻, W⁺ → ℓ⁺ ν, W⁻ → j j`
 
@@ -289,7 +289,7 @@ A classic diboson analysis with one W decaying leptonically and one hadronically
 
 ---
 
-### 📄 Template 2: tt̄ Semi-Leptonic (`user_input_2.txt`)
+###  Template 2: tt̄ Semi-Leptonic (`user_input_2.txt`)
 
 **Process:** `p p → t t̄, t → b W⁺ → b ℓ⁺ ν, t̄ → b̄ W⁻ → b̄ j j`
 
@@ -312,7 +312,7 @@ The workhorse top quark pair production analysis in the lepton+jets channel.
 
 ---
 
-### 📄 Template 3: H → γγ Diphoton (`user_input_3.txt`)
+###  Template 3: H → γγ Diphoton (`user_input_3.txt`)
 
 **Process:** `p p → H → γ γ`
 
@@ -335,7 +335,7 @@ The golden discovery channel for the Higgs boson with clean diphoton signature.
 
 ---
 
-### 📄 Template 4: WZ Tri-Lepton (`user_input_4.txt`)
+###  Template 4: WZ Tri-Lepton (`user_input_4.txt`)
 
 **Process:** `p p → W Z, W → ℓ ν, Z → ℓ⁺ ℓ⁻`
 
@@ -359,7 +359,7 @@ Diboson production with a clean three-lepton final state.
 
 ---
 
-### 📄 Template 5: H → ττ VBF (`user_input_5.txt`)
+###  Template 5: H → ττ VBF (`user_input_5.txt`)
 
 **Process:** `p p → H j j, H → τ⁺ τ⁻` (Vector Boson Fusion)
 
@@ -446,7 +446,7 @@ python generated_analysis.py path/to/your/data.lhco
 
 ---
 
-## 🔄 How It Works
+##  How It Works
 
 ```mermaid
 flowchart LR
@@ -477,7 +477,7 @@ flowchart LR
 
 ---
 
-## 📚 LHCO File Format Reference
+##  LHCO File Format Reference
 
 | Column | Field | Description |
 |--------|-------|-------------|
@@ -501,7 +501,7 @@ flowchart LR
 
 ---
 
-## 🗺️ Roadmap
+##  Roadmap
 
 - [x] LHCO analysis generation with validation
 - [x] Automatic code fixing and regeneration
