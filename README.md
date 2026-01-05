@@ -11,7 +11,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
 <p align="center">
-  <img src="logo/workflow.jpg" alt="CoLLM Workflow" width="900"/>
+  <img src="logo/workflow.pdf" alt="CoLLM Workflow" width="900"/>
 </p>
 
 *Generate production-ready Python analysis scripts for LHCO particle physics data using Large Language Models — no boilerplate, no headaches.*
