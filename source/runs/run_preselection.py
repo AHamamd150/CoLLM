@@ -2,6 +2,7 @@ from source.LLM.collm_lhco import generate_lhco_code
 from source.LLM.pyfixer import fix_code
 from source.utils.requirements_check import ensure_packages 
 from source.utils.read_configs import read_conf 
+from source.utils.plot_checker import add_watermark_to_file
 import subprocess
 import sys
 from pathlib import Path
@@ -44,6 +45,7 @@ def run_and_capture_error(script_path: str, *args, output_dir: str = None) -> st
     """Run a Python script and return any error output."""
     env = os.environ.copy()
     env['MPLBACKEND'] = 'Agg'
+    add_watermark_to_file(script_path)
     result = subprocess.run(
         [sys.executable, script_path] + list(args),
         capture_output=True,
