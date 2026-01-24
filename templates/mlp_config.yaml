@@ -1,0 +1,62 @@
+# ============================================================================
+# MLP Classifier Configuration
+# ============================================================================
+
+seed: 42
+output_dir: "output"
+
+# ============================================================================
+# Data Configuration
+# ============================================================================
+data:
+  signal_path: "/Users/hammad/work/try/mlp_classifier/data/alpha-0.000000_HighLevel.csv"
+  background_path: "/Users/hammad/work/try/mlp_classifier/data/QCD_HighLevel.csv"
+  train_size: 100000          # samples per class for training
+  test_size: 20000            # samples per class for testing
+  val_ratio: 0.15             # fraction of training data for validation
+  normalize: true             # normalize features with StandardScaler
+
+# ============================================================================
+# Model Architecture
+# ============================================================================
+# Layer types: dense, dropout, batchnorm, flatten
+# Activations: relu, gelu, tanh, sigmoid, leaky_relu, elu, selu, softplus
+model:
+  layers:
+    - type: dense
+      units: 128
+      activation: relu
+    - type: dense
+      units: 64
+      activation: relu
+
+  output_units: 2               # 2 for binary classification
+  output_activation: softmax       # null for logits (use with cross_entropy loss)
+
+# ============================================================================
+# Training Configuration
+# ============================================================================
+train:
+  epochs: 10
+  batch_size: 256
+  learning_rate: 0.001
+  weight_decay: 0.0001          # L2 regularization
+  optimizer: adam               # adam, adamw, sgd
+  device: auto                  # auto, cpu, cuda, cuda:0, cuda:1
+
+  # Early Stopping
+  early_stopping: true
+  early_stopping_patience: 3   # stop if no improvement for N epochs
+  early_stopping_metric: val_loss  # val_loss or eval_metric
+
+  # Training Precision
+  precision: float32            # float32, float16, mixed
+
+  # Learning Rate Scheduler
+  scheduler:
+    type: plateau               # none, step, plateau, cosine, onecycle
+    patience: 5                 # reduce LR if no improvement for N epochs
+    min_lr: 1e-06            # minimum learning rate
+
+  # Evaluation Metric (for model selection and reporting)
+  eval_metric: auc              # accuracy, auc, f1, recall, precision

@@ -1,0 +1,27 @@
+[SELECTION_CUTS]
+- Select electrons with pT > 10 GeV and |eta| < 2.5
+- Select muons with pT > 10 GeV and |eta| < 2.4
+- Select the leading muon with pt > 40  and the leading electron with pt > 50
+- select delta R between leading electorn and subleading electron > 0.1
+- requires at least two leptons
+- requires at least two  jets
+- select invariant mass of the leading and second leading leptons beween 10 and  200
+
+[PLOTS_FOR_VALIDATION]
+- All plots are histograms and in a signle figure. 
+- plot the leading electron and subleading muon superimposed. use different opessity for better visualization. 
+- Plot the missing energy distribution 
+- Plot the transverse momentum of the leading  jet
+- plot the eta of  jets
+- plot the pT of the ligth jets
+- plot invariant mass of the leading and subleading jets in the mass range between 10 and 150
+- plot invariant mass of the leading and subleading lepton in the mass range between 10 and 150
+- plot delta R between leading electorn and subleading electron
+ Each histogram is requried a 50 bins.
+ Write the title of the figures in symbols or latex if aplicaple 
+ Normalize all the histograms to one. 
+
+
+[OUTPUT_STRUCTURE]
+- Enforce the Printing of the number of events after each selection cut
+

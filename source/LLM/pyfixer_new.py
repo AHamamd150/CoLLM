@@ -12,53 +12,6 @@ Usage:
     fixed = fix_code(code, error, use_search=True)
 """
 
-'''
-User Input (code + error)
-         │
-         ▼
-   ┌─────────────┐
-   │ Parse Error │ ──► Extract: type, message, line number
-   └─────────────┘
-         │
-         ▼
-   ┌─────────────────┐
-   │ use_search=True?│
-   └─────────────────┘
-      │           │
-     Yes          No
-      │           │
-      ▼           │
-┌──────────┐      │
-│  Tavily  │      │
-│  Search  │      │
-└──────────┘      │
-      │           │
-      ▼           ▼
-   ┌─────────────────┐
-   │  Build Prompt   │ ──► code + error + search results
-   └─────────────────┘
-         │
-         ▼
-   ┌─────────────┐
-   │  LLM Model  │ ──► Generate fixed code
-   └─────────────┘
-         │
-         ▼
-   ┌─────────────┐
-   │Extract Code │ ──► Find ```python``` block
-   └─────────────┘
-         │
-         ▼
-   ┌─────────────┐
-   │  Validate   │ ──► Check syntax
-   └─────────────┘
-         │
-         ▼
-    Return fixed code
-
-'''
-
-
 import re
 import ast
 import torch

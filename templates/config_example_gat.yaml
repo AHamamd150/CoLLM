@@ -1,0 +1,66 @@
+# ============================================================================
+# GNN Classifier Configuration - GAT (Graph Attention Network)
+# ============================================================================
+
+seed: 42
+output_dir: "output_gnn_gat"
+
+# ============================================================================
+# Data Configuration
+# ============================================================================
+data:
+  signal_path: "/Users/hammad/CoLLM-main/data/alpha-0.000000_HighLevel.csv"
+  background_path: "/Users/hammad/CoLLM-main/data/QCD_HighLevel.csv"
+  train_size: 10000
+  test_size: 2000
+  val_ratio: 0.15
+  normalize: true
+  nodes_per_graph: 5        # auto-detect
+
+# ============================================================================
+# Model Architecture - GAT
+# ============================================================================
+model:
+  type: GAT
+  layers:
+    - out_channels: 32
+      activation: relu
+      heads: 4                 # number of attention heads
+      concat: true             # concatenate heads (output = out_channels * heads)
+      dropout: 0.1             # attention dropout
+      batchnorm: true
+    - out_channels: 32
+      activation: relu
+      heads: 4
+      concat: true
+      dropout: 0.1
+      batchnorm: true
+    - out_channels: 64
+      activation: relu
+      heads: 1                 # last layer: single head
+      concat: false            # no concatenation
+      dropout: 0.0
+      batchnorm: false
+
+  pooling: global_mean
+  output_units: 2
+  output_activation: null
+
+# ============================================================================
+# Training Configuration
+# ============================================================================
+train:
+  epochs: 30
+  batch_size: 32
+  learning_rate: 0.0005
+  weight_decay: 0.0001
+  optimizer: adamw
+  device: auto
+  early_stopping: true
+  early_stopping_patience: 15
+  early_stopping_metric: val_loss
+  precision: float32
+  scheduler:
+    type: cosine
+    min_lr: 0.000001
+  eval_metric: auc

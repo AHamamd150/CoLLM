@@ -1,0 +1,68 @@
+# ============================================================================
+# GNN Classifier Configuration - EdgeConv (Dynamic Graph CNN)
+# ============================================================================
+
+seed: 42
+output_dir: "output_gnn_edgeconv"
+
+# ============================================================================
+# Data Configuration
+# ============================================================================
+data:
+  signal_path: "/Users/hammad/CoLLM-main/data/alpha-0.000000_HighLevel.csv"
+  background_path: "/Users/hammad/CoLLM-main/data/QCD_HighLevel.csv"
+  train_size: 10000
+  test_size: 2000
+  val_ratio: 0.15
+  normalize: true
+  node_features: 4
+  edge_features: 0
+  nodes_per_graph: 5        # auto-detect
+
+# ============================================================================
+# Model Architecture - EdgeConv
+# ============================================================================
+model:
+  type: EdgeConv
+  layers:
+    - out_channels: 64
+      activation: relu
+      k: 7                    # k nearest neighbors (not used for fully connected)
+      aggr: max               # aggregation: max, mean, add
+      batchnorm: true
+      dropout: 0.1
+    - out_channels: 64
+      activation: relu
+      k: 7
+      aggr: max
+      batchnorm: true
+      dropout: 0.1
+    - out_channels: 64
+      activation: relu
+      k: 7
+      aggr: max
+      batchnorm: false
+      dropout: 0.0
+
+  pooling: global_max         # EdgeConv typically uses max pooling
+  output_units: 2
+  output_activation: null
+
+# ============================================================================
+# Training Configuration
+# ============================================================================
+train:
+  epochs: 15
+  batch_size: 64
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: adam
+  device: auto
+  early_stopping: true
+  early_stopping_patience: 15
+  early_stopping_metric: val_loss
+  precision: float32
+  scheduler:
+    type: cosine
+    min_lr: 0.000001
+  eval_metric: auc
