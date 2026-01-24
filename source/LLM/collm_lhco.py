@@ -5,44 +5,13 @@
 # Does NOT execute the generated code
 # =========================
 
-"""
-Usage:
-    from collm_lhco import generate_lhco_code
-    
-    # Using local model with file path
-    code = generate_lhco_code(
-        user_input_path="user_input.txt",
-        output_path="generated_analysis.py",
-        model_id="Qwen/Qwen2.5-Coder-14B-Instruct"
-    )
-    
-    # Using local model with string input directly
-    code = generate_lhco_code(
-        user_input_text="[SELECTION_CUTS]\\n...",
-        output_path="generated_analysis.py",
-        model_id="Qwen/Qwen2.5-Coder-14B-Instruct"
-    )
-    
-    # Using Hugging Face Inference API
-    code = generate_lhco_code(
-        user_input_path="user_input.txt",
-        output_path="generated_analysis.py",
-        model_id="Qwen/Qwen2.5-Coder-14B-Instruct",
-        use_api=True,
-        api_key="your_hf_api_key"
-    )
-"""
-
-# Standard Libraries
 import sys
 import subprocess
 from pathlib import Path
 import re
 from typing import Dict, Any, Tuple, Optional
 
-# =========================
-# Minimal Dependency Loader
-# =========================
+
 REQUIRED_PACKAGES = {
     "transformers": "transformers",
     "huggingface_hub": "huggingface_hub",
@@ -65,16 +34,14 @@ def ensure_packages():
 
 ensure_packages()
 
-# =========================
-# Imports (after install)
-# =========================
+
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from huggingface_hub import InferenceClient  
 
-# =========================
+
 # Configuration
-# =========================
+
 class Config:
     """Centralized configuration."""
     SYSTEM_PROMPT_PATH = Path("./source/configs/system_prompt.txt")
@@ -86,9 +53,7 @@ class Config:
     TOP_K = 00
     DO_SAMPLE = False
 
-# =========================
-# Utility Functions
-# =========================
+
 def load_text_file(file_path: Path) -> str:
     """Load text from a file with error handling."""
     if not file_path.exists():
@@ -146,7 +111,7 @@ def extract_python_code(text: str) -> str:
             code = '\n'.join(code_lines).strip()
             return code
     
-    # Check if response is garbage
+
     if 'Human:' in text or text.startswith('H:') or '[SELECTION_CUTS]' in text[:100]:
         return ""
     
@@ -197,9 +162,6 @@ def parse_user_input_text(text: str) -> Tuple[str, str, str]:
 
     return selection_cuts, plots_for_validation, output_structure
 
-# =========================
-# Device Detection
-# =========================
 def get_device_and_dtype():
     """Detect the best available device and appropriate dtype."""
     if torch.cuda.is_available():
@@ -261,9 +223,7 @@ def load_model_and_tokenizer(model_id: str):
     
     return model, tokenizer
 
-# =========================
-# Prompt Building
-# =========================
+
 def build_prompt(system_prompt: str, selection_cuts: str, plots_for_validation: str, 
                  output_structure: str, tokenizer) -> str:
     """Build the prompt using the model's chat template."""
