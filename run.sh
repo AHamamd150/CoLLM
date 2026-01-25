@@ -6,7 +6,7 @@ RUN_TUI=false
 RUN_GUI=false
 RUN_MLP=false
 RUN_GNN=false
-
+RUN_Transformer=false
 
 usage() {
     echo "Usage:"
