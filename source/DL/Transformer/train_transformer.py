@@ -1,9 +1,3 @@
-"""
-Transformer Training Module
-
-Training loop and evaluation functions for Particle Cloud Transformer.
-"""
-
 from typing import Dict, Optional
 import numpy as np
 import torch
@@ -11,11 +5,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.cuda.amp import autocast, GradScaler
 
-
-# ============================================================================
-# Metrics
-# ============================================================================
-
+#==============================
+#==============================
+#==============================
 def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return np.mean(y_true == y_pred)
 
@@ -98,9 +90,8 @@ def get_metric_value(metrics: Dict[str, float], metric_name: str) -> float:
     raise ValueError(f"Unknown metric: {metric_name}")
 
 
-# ============================================================================
+
 # Optimizer and Scheduler
-# ============================================================================
 
 def get_optimizer(name: str, params, lr: float, weight_decay: float):
     name = name.lower()
@@ -118,7 +109,7 @@ def get_optimizer(name: str, params, lr: float, weight_decay: float):
 
 
 def get_scheduler(cfg, optimizer, train_loader_len: int, epochs: int):
-    """Create learning rate scheduler from config."""
+
     sched_type = cfg.type.lower()
     
     if sched_type == "none":
@@ -180,10 +171,7 @@ def get_device(device_config: str) -> torch.device:
     
     return device
 
-
-# ============================================================================
 # Training Loop
-# ============================================================================
 
 def train_epoch(
     model: nn.Module,
@@ -229,7 +217,7 @@ def train_epoch(
             
             optimizer.step()
         
-        # Step scheduler if OneCycle or cosine_warmup
+
         if scheduler is not None and isinstance(scheduler, (
             torch.optim.lr_scheduler.OneCycleLR,
             torch.optim.lr_scheduler.LambdaLR
@@ -369,10 +357,9 @@ def train(
         print(f"Epoch {epoch:03d}/{cfg.epochs} | "
               f"loss: {train_m['loss']:.4f}/{val_m['loss']:.4f} | "
               f"acc: {train_m['acc']:.4f}/{val_m['accuracy']:.4f} | "
-              f"{cfg.eval_metric}: {current_eval_metric:.4f} | "
-              f"lr: {current_lr:.2e}")
+              f"{cfg.eval_metric}: {current_eval_metric:.4f} "
+              )
         
-        # Update scheduler (except those that step per batch)
         if scheduler is not None and not isinstance(scheduler, (
             torch.optim.lr_scheduler.OneCycleLR,
             torch.optim.lr_scheduler.LambdaLR

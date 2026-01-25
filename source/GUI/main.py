@@ -28,12 +28,12 @@ import streamlit as st
 import threading
 from queue import Queue
 
-# ════════════════════════════════
-#                              PAGE CONFIGURATION
-# ═════════════════════════════════
+#=======================================
+#   PAGE CONFIGURATION
+#=======================================
 st.set_page_config(
     page_title="CoLLM • ML Toolbox",
-    page_icon="🔬",
+    page_icon=":dizzy:",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -43,9 +43,9 @@ from source.utils.requirements_check import ensure_packages
 from source.runs.run_preselection_GUI import run_LLM
 LLM_RUNNER_AVAILABLE = True
 
-#═════════════════════════════════════
-#                         HELPER FUNCTIONS FOR MLP CONFIG
-#═════════════════════════════════════
+#=======================================
+#   Helper functions for MLP
+#=======================================
 
 def generate_mlp_config(
     seed, output_dir, signal_path, background_path, train_size, test_size, 
@@ -213,9 +213,9 @@ train:
     return yaml_str
 
 
-#══════════════════════════════════════
-#                         HELPER FUNCTIONS FOR GNN CONFIG
-#═══════════════════════════════════
+#=======================================
+#   Helper functions for GNN networks configurations 
+#=======================================
 
 def generate_gnn_config(
     seed, output_dir, signal_path, background_path, train_size, test_size,
@@ -243,6 +243,7 @@ def generate_gnn_config(
             layer_dict["heads"] = layer.get("heads", 4)
             layer_dict["concat"] = layer.get("concat", True)
             layer_dict["dropout"] = layer.get("dropout", 0.0)
+        # Modified: we don't consider the self connected loops    
         #elif gnn_type == "GCN":
          #   layer_dict["improved"] = layer.get("improved", False)
           #  layer_dict["cached"] = layer.get("cached", False)
@@ -254,7 +255,7 @@ def generate_gnn_config(
         
         gnn_layers.append(layer_dict)
     
-    # Build scheduler config
+
     scheduler_config = {"type": scheduler_type}
     if scheduler_type == "step":
         scheduler_config["step_size"] = scheduler_params.get("step_size", 10)
@@ -265,7 +266,7 @@ def generate_gnn_config(
     elif scheduler_type == "onecycle":
         scheduler_config["max_lr"] = scheduler_params.get("max_lr", learning_rate * 10)
     
-    # Build complete config
+
     config = {
         "seed": seed,
         "output_dir": output_dir,
@@ -408,19 +409,181 @@ train:
     return yaml_str
 
 
-#════════════════════════════════════
-#                          Style of the streamlit app
-#════════════════════════════════
+#=======================================
+# Helper functions for Transformer network 
+#=======================================
+
+def generate_transformer_config(
+    seed, output_dir, signal_path, background_path, train_size, test_size,
+    val_ratio, normalize, particles_per_cloud,
+    embed_dim, num_heads, num_layers, ffn_dim, dropout, attention_dropout,
+    pooling, num_classes, pre_norm,
+    epochs, batch_size, learning_rate, weight_decay, optimizer, device,
+    early_stopping, early_stopping_patience, early_stopping_metric,
+    precision, scheduler_type, scheduler_params, eval_metric, gradient_clip
+):
+    """Generate Transformer configuration dictionary matching config.yaml format."""
+    
+    # Build scheduler config
+    scheduler_config = {"type": scheduler_type}
+    if scheduler_type == "step":
+        scheduler_config["step_size"] = scheduler_params.get("step_size", 10)
+        scheduler_config["gamma"] = scheduler_params.get("gamma", 0.1)
+    elif scheduler_type == "plateau":
+        scheduler_config["patience"] = scheduler_params.get("patience", 5)
+        scheduler_config["min_lr"] = scheduler_params.get("min_lr", 1e-6)
+    elif scheduler_type == "onecycle":
+        scheduler_config["max_lr"] = scheduler_params.get("max_lr", learning_rate * 10)
+    elif scheduler_type == "cosine_warmup":
+        scheduler_config["warmup_steps"] = scheduler_params.get("warmup_steps", 100)
+        scheduler_config["min_lr"] = scheduler_params.get("min_lr", 1e-6)
+    
+    # Build complete config
+    config = {
+        "seed": seed,
+        "output_dir": output_dir,
+        
+        "data": {
+            "signal_path": signal_path,
+            "background_path": background_path,
+            "train_size": train_size,
+            "test_size": test_size,
+            "val_ratio": val_ratio,
+            "normalize": normalize,
+            "particles_per_cloud": particles_per_cloud
+        },
+        
+        "model": {
+            "embed_dim": embed_dim,
+            "num_heads": num_heads,
+            "num_layers": num_layers,
+            "ffn_dim": ffn_dim,
+            "dropout": dropout,
+            "attention_dropout": attention_dropout,
+            "pooling": pooling,
+            "num_classes": num_classes,
+            "pre_norm": pre_norm
+        },
+        
+        "train": {
+            "epochs": epochs,
+            "batch_size": batch_size,
+            "learning_rate": learning_rate,
+            "weight_decay": weight_decay,
+            "optimizer": optimizer,
+            "device": device,
+            "early_stopping": early_stopping,
+            "early_stopping_patience": early_stopping_patience,
+            "early_stopping_metric": early_stopping_metric,
+            "precision": precision,
+            "scheduler": scheduler_config,
+            "eval_metric": eval_metric,
+            "gradient_clip": gradient_clip
+        }
+    }
+    
+    return config
+
+
+def transformer_config_to_yaml(config):
+    """Convert Transformer config dictionary to YAML string with comments."""
+    
+    yaml_str = """# ============================================================================
+# Transformer Classifier Configuration
+# ============================================================================
+
+"""
+    yaml_str += f"seed: {config['seed']}\n"
+    yaml_str += f'output_dir: "{config["output_dir"]}"\n\n'
+    
+    yaml_str += """# ============================================================================
+# Data Configuration
+# ============================================================================
+data:
+"""
+    yaml_str += f'  signal_path: "{config["data"]["signal_path"]}"\n'
+    yaml_str += f'  background_path: "{config["data"]["background_path"]}"\n'
+    yaml_str += f'  train_size: {config["data"]["train_size"]}          # samples per class for training\n'
+    yaml_str += f'  test_size: {config["data"]["test_size"]}            # samples per class for testing\n'
+    yaml_str += f'  val_ratio: {config["data"]["val_ratio"]}             # fraction of training data for validation\n'
+    yaml_str += f'  normalize: {str(config["data"]["normalize"]).lower()}             # normalize features\n'
+    yaml_str += f'  particles_per_cloud: {config["data"]["particles_per_cloud"]}      # number of particles per cloud\n\n'
+    
+    yaml_str += """# ============================================================================
+# Model Architecture - Transformer
+# ============================================================================
+# Pooling: mean, max, attention
+model:
+"""
+    model = config["model"]
+    yaml_str += f'  embed_dim: {model["embed_dim"]}                # embedding dimension\n'
+    yaml_str += f'  num_heads: {model["num_heads"]}                 # number of attention heads\n'
+    yaml_str += f'  num_layers: {model["num_layers"]}                # number of transformer layers\n'
+    yaml_str += f'  ffn_dim: {model["ffn_dim"]}                  # feed-forward network dimension\n'
+    yaml_str += f'  dropout: {model["dropout"]}                 # dropout rate\n'
+    yaml_str += f'  attention_dropout: {model["attention_dropout"]}       # attention dropout rate\n'
+    yaml_str += f'  pooling: {model["pooling"]}                  # pooling method: mean, max, attention\n'
+    yaml_str += f'  num_classes: {model["num_classes"]}                # number of output classes\n'
+    yaml_str += f'  pre_norm: {str(model["pre_norm"]).lower()}               # use pre-normalization\n\n'
+    
+    yaml_str += """# ============================================================================
+# Training Configuration
+# ============================================================================
+train:
+"""
+    train = config["train"]
+    yaml_str += f'  epochs: {train["epochs"]}\n'
+    yaml_str += f'  batch_size: {train["batch_size"]}\n'
+    yaml_str += f'  learning_rate: {train["learning_rate"]}\n'
+    yaml_str += f'  weight_decay: {train["weight_decay"]}          # L2 regularization\n'
+    yaml_str += f'  optimizer: {train["optimizer"]}               # adam, adamw, sgd\n'
+    yaml_str += f'  device: {train["device"]}                  # auto, cpu, cuda, cuda:0, cuda:1\n'
+    yaml_str += f'\n  # Early Stopping\n'
+    yaml_str += f'  early_stopping: {str(train["early_stopping"]).lower()}\n'
+    yaml_str += f'  early_stopping_patience: {train["early_stopping_patience"]}   # stop if no improvement for N epochs\n'
+    yaml_str += f'  early_stopping_metric: {train["early_stopping_metric"]}  # val_loss or eval_metric\n'
+    yaml_str += f'\n  # Training Precision\n'
+    yaml_str += f'  precision: {train["precision"]}            # float32, float16, mixed\n'
+    yaml_str += f'\n  # Gradient Clipping\n'
+    yaml_str += f'  gradient_clip: {train["gradient_clip"]}             # gradient clipping value\n'
+    yaml_str += f'\n  # Learning Rate Scheduler\n'
+    yaml_str += f'  scheduler:\n'
+    yaml_str += f'    type: {train["scheduler"]["type"]}               # none, step, plateau, cosine, cosine_warmup, onecycle\n'
+    
+    sched = train["scheduler"]
+    if sched["type"] == "step":
+        yaml_str += f'    step_size: {sched.get("step_size", 10)}               # reduce LR every N epochs\n'
+        yaml_str += f'    gamma: {sched.get("gamma", 0.1)}                  # LR multiplier\n'
+    elif sched["type"] == "plateau":
+        yaml_str += f'    patience: {sched.get("patience", 5)}                 # reduce LR if no improvement for N epochs\n'
+        yaml_str += f'    min_lr: {sched.get("min_lr", 0.000001)}            # minimum learning rate\n'
+    elif sched["type"] == "onecycle":
+        yaml_str += f'    max_lr: {sched.get("max_lr", 0.01)}                # maximum learning rate\n'
+    elif sched["type"] == "cosine_warmup":
+        yaml_str += f'    warmup_steps: {sched.get("warmup_steps", 100)}          # warmup steps\n'
+        yaml_str += f'    min_lr: {sched.get("min_lr", 0.000001)}            # minimum learning rate\n'
+    elif sched["type"] == "cosine":
+        yaml_str += f'    # Cosine annealing uses epochs as T_max\n'
+    
+    yaml_str += f'\n  # Evaluation Metric (for model selection and reporting)\n'
+    yaml_str += f'  eval_metric: {train["eval_metric"]}              # accuracy, auc, f1, recall, precision\n'
+    
+    return yaml_str
+
+
+#=======================================
+#  Style for CoLLM page. This style is created by Opus 4.5
+#=======================================
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600&display=swap');
     
     /* ═══════════════════ ROOT VARIABLES ═══════════════════ */
     :root {
-        --bg-primary: #121220;
-        --bg-secondary: #1a1a2e;
-        --bg-card: #1e1e30;
-        --bg-hover: #282840;
+        --bg-primary: #1e1e2e;
+        --bg-secondary: #262640;
+        --bg-card: #2a2a45;
+        --bg-hover: #353550;
         --accent-primary: #6366f1;
         --accent-secondary: #8b5cf6;
         --accent-tertiary: #a855f7;
@@ -429,7 +592,7 @@ st.markdown("""
         --text-secondary: #fff;
         --text-title: #94a3b8;
         --text-muted: #64748b;
-        --border-color: #3a3a4a;
+        --border-color: #454560;
         --success: #10b981;
         --warning: #f59e0b;
         --error: #ef4444;
@@ -449,7 +612,7 @@ st.markdown("""
     
     /* ═══════════════════ SIDEBAR STYLING ═══════════════════ */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1a1a2e 0%, #121220 100%);
+        background: linear-gradient(180deg, #262640 0%, #1e1e2e 100%);
         border-right: 1px solid var(--border-color);
         width: 340px !important;
     }
@@ -468,7 +631,7 @@ st.markdown("""
     h1, h2, h3, h4, h5, h6 {
         font-family: 'Space Grotesk', sans-serif !important;
         color: var(--text-primary) !important;
-        font-weight: 600 !important;
+        font-weight: 800 !important;
     }
     
     p, span, label, div {
@@ -498,8 +661,8 @@ st.markdown("""
     
     .hero-title {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 3rem;
-        font-weight: 700;
+        font-size:15rem;
+        font-weight: 1700;
         background: var(--gradient-1);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -510,9 +673,9 @@ st.markdown("""
     
     .hero-subtitle {
         font-family: 'Sora', sans-serif;
-        font-size: 1.1rem;
-        color: var(--text-title);
-        max-width: 700px;
+        font-size: 6.1rem;
+        color: white; /*var(--text-title);*/
+        max-width: 900px;
         line-height: 1.7;
     }
     
@@ -525,7 +688,7 @@ st.markdown("""
         color: var(--accent-primary);
         padding: 6px 14px;
         border-radius: 20px;
-        font-size: 0.8rem;
+        font-size: 1.5rem;
         font-weight: 500;
         margin-bottom: 1rem;
     }
@@ -553,9 +716,9 @@ st.markdown("""
     
     .section-title {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.6rem;
+        font-size: 5.6rem;
         font-weight: 600;
-        color: var(--text-primary);
+        color:  var(--text-primary);
         margin: 0;
     }
     
@@ -591,7 +754,7 @@ st.markdown("""
     
     .card-title {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 1.1rem;
+        font-size: 5.1rem;
         font-weight: 600;
         color: var(--text-primary);
         margin: 0;
@@ -604,7 +767,7 @@ st.markdown("""
         background: var(--bg-secondary) !important;
         border: 1px solid var(--border-color) !important;
         border-radius: 10px !important;
-        color: var(--text-primary) !important;
+        color: white; #var(--text-primary) !important;
         font-family: 'JetBrains Mono', monospace !important;
         padding: 0.75rem 1rem !important;
         transition: all 0.2s ease !important;
@@ -625,7 +788,7 @@ st.markdown("""
         font-family: 'Sora', sans-serif !important;
         font-weight: 500 !important;
         color: var(--text-secondary) !important;
-        font-size: 0.9rem !important;
+        font-size: 4.9rem !important;
     }
     
     /* ═══════════════════ SELECT BOX STYLING ═══════════════════ */
@@ -644,7 +807,7 @@ st.markdown("""
         padding: 0.7rem 1.5rem !important;
         font-family: 'Sora', sans-serif !important;
         font-weight: 600 !important;
-        font-size: 0.9rem !important;
+        font-size: 2.9rem !important;
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 15px var(--accent-glow) !important;
     }
@@ -706,11 +869,11 @@ st.markdown("""
     
     .stTabs [data-baseweb="tab"] {
         background: transparent !important;
-        border-radius: 18px !important;
+        border-radius: 20px !important;
         color: var(--text-secondary) !important;
         font-family: 'Space Grotesk', sans-serif !important;
         font-weight: 800 !important;
-        font-size: 2.2rem !important;
+        font-size: 5.2rem !important;
         padding: 32px 60px !important;
         transition: all 0.2s ease !important;
         min-height: 90px !important;
@@ -764,7 +927,7 @@ st.markdown("""
     
     .metric-value {
         font-family: 'Space Grotesk', sans-serif;
-        font-size: 2rem;
+        font-size: 3rem;
         font-weight: 700;
         background: var(--gradient-1);
         -webkit-background-clip: text;
@@ -783,7 +946,7 @@ st.markdown("""
         background: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: 12px;
-        padding: 1rem;
+        padding: 2rem;
         margin-bottom: 0.5rem;
         transition: all 0.2s ease;
     }
@@ -796,12 +959,12 @@ st.markdown("""
         font-family: 'Space Grotesk', sans-serif;
         font-weight: 600;
         color: var(--text-primary);
-        font-size: 0.95rem;
+        font-size: 1.15rem;
     }
     
     .author-email {
         font-family: 'JetBrains Mono', monospace;
-        font-size: 0.75rem;
+        font-size: 1.00rem;
         color: var(--text-muted);
     }
     
@@ -866,8 +1029,8 @@ st.markdown("""
     
     /* ═══════════════════ YAML CODE DISPLAY ═══════════════════ */
     .yaml-preview {
-        background: #1e1e30;
-        border: 1px solid #3a3a4a;
+        background: #2a2a45;
+        border: 1px solid #454560;
         border-radius: 10px;
         padding: 1rem;
         font-family: 'JetBrains Mono', monospace;
@@ -879,22 +1042,22 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ====================================
-#                              Sidbar
+#            Sidbar
 # ====================================
 with st.sidebar:
     st.markdown("""
     <div style="text-align: center; padding: 1.5rem 0;">
         <div style="
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 700;
             background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-        ">🔬 CoLLM</div>
-        <p style="color: #64748b; font-size: 0.8rem; margin-top: 0.5rem;">
-            ML Toolbox for HEP
+        ">CoLLM</div>
+        <p style="color: #64748b; font-size: 0.9rem; margin-top: 0.5rem;">
+            ML Toolbox for collider analyses
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -905,18 +1068,19 @@ with st.sidebar:
     st.markdown("""
     <div style="margin-bottom: 1rem;">
         <p style="
-            color: #94a3b8;
-            font-size: 0.75rem;
+            color: white;
+            font-size: 1.2rem;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             margin-bottom: 0.5rem;
-        ">👥 Authors</p>
+        ">Authors</p>
     </div>
     """, unsafe_allow_html=True)
     
     authors = [
-        {"name": "Author 1", "email": "author1@example.com"},
-        {"name": "Author 2", "email": "author2@example.com"},
+        {"name": "Ahmed Hammad", "email": "ahammad115566@gmail.com"},
+        {"name": "Waleed Esmail", "email": "waleed.physics@gmail.com"},
+        {"name": "Mihoko Nojiri", "email": "mihoko.nojiri@gmail.com "},
     ]
     
     for author in authors:
@@ -926,29 +1090,121 @@ with st.sidebar:
             <div class="author-email">{author['email']}</div>
         </div>
         """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
+    
+    # HuggingFace API Instructions
+    st.markdown("""
+    <div style="margin-bottom: 1rem;">
+        <p style="
+            color: #94a3b8;
+            font-size: 1.15rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        ">🤗 HuggingFace API Setup</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    with st.expander("📖 How to create a HuggingFace API Token", expanded=True):
+        st.markdown("""
+        **Step 1: Create a HuggingFace Account**
+        - Go to [huggingface.co](https://huggingface.co)
+        - Click **Sign Up** and create an account
+        - Verify your email address
+        
+        **Step 2: Generate an API Token**
+        1. Log in to your HuggingFace account
+        2. Click on your profile picture (top right)
+        3. Select **Settings**
+        4. Navigate to **Access Tokens** in the left sidebar
+        5. Click **New token**
+        6. Give your token a name (e.g., "CoLLM")
+        7. Select **Read** permission (or **Write** if needed)
+        8. Click **Generate token**
+        9. **Copy the token immediately** (it won't be shown again!)
+        
+        **Step 3: Use the Token**
+        - Store your token securely
+        
+        **⚠️ Important:**
+        - Never share your token publicly
+        """)
+    
+    st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
+    
+    # HuggingFace API Instructions
+    with st.expander("🤗 HuggingFace API Setup", expanded=True):
+        st.markdown("""
+        <div style="font-size: 1.15rem; color: white;">
+        
+        **Steps to create a HuggingFace API Token:**
+        
+        1. **Create an account**
+           - Go to [huggingface.co](https://huggingface.co)
+           - Click "Sign Up" and create a free account
+        
+        2. **Access Settings**
+           - Click on your profile picture (top right)
+           - Select "Settings" from the dropdown
+        
+        3. **Generate Access Token**
+           - In the left sidebar, click "Access Tokens"
+           - Click "New token" button
+           - Give your token a name (e.g., "CoLLM")
+           - Select token type: **Read** (for inference)
+           - Click "Generate token"
+        
+        4. **Copy and Save**
+           - Copy the generated token immediately
+           - Store it securely (you won't see it again!)
+        
+        5. **Use in CoLLM**
+           - Paste your token in the API Key field
+           - The token format: `hf_xxxxxxxxxxxxxxxxx`
+        
+        </div>
+        
+        <div style="
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+        ">
+            
+        </div>
+        """, unsafe_allow_html=True)
 
-# ══════════════════════════
-#                         Main part
-# ══════════════════════════
+# ===================================
+#  Main part
+# ===================================
 
-# Hero Section
 st.markdown("""
 <div class="hero-container">
     <h1 class="hero-title">CoLLM Toolbox</h1>
     <p class="hero-subtitle">
-        An integrated platform combining LLM-powered analysis code generation 
-        with state-of-the-art deep learning classifiers for high energy physics research.
+        An integrated framework combining LLM-powered selection analysis code generation 
+        with advanced deep learning classifiers for high energy physics research.
     </p>
+        <p class="hero-subtitle">
+⚠️   For LLM code generation on your laptop, we strongly recommend using the Hugging Face API.
+This enables inference via Hugging Face Claude. 
+Please refer to the sidebar for detailed instructions on how to create your API key.
+ </p>
+
 </div>
 """, unsafe_allow_html=True)
 
-# Main Tabs
-tab1, tab2, tab3 = st.tabs(["🤖 Selection Analysis", "🧠 Deep Learning", "📊 Results"])
+
+tab1, tab2, tab3 = st.tabs([" Selection Analysis", " Deep Learning", " Results"])
 start_training = False
 gnn_start_training = False
-
+tr_start_training = False
 #===================================================
-#                          Selection analysis configuration
+#     Selection analysis configuration
 #===================================================
 
  #   st.markdown("""
@@ -1070,10 +1326,10 @@ gnn_start_training = False
  #               elif path_:
  #                   st.success(f" Background files verified: `{path_}`")
 with tab1:    
-    # LLM Code Generation Section
+
     st.markdown("""
     <div class="section-header">
-        <div class="section-icon">🤖</div>
+        <div class=""></div>
         <div>
             <h3 class="section-title">LLM  Analysis Generation</h3>
             <p class="section-desc">Describe your analysis in natural language</p>
@@ -1131,10 +1387,10 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
     
-    # LLM Configuration Section
+
     st.markdown("""
     <div class="section-header">
-        <div class="section-icon">⚙️</div>
+        <div class=""></div>
         <div>
             <h3 class="section-title">LLM Configuration</h3>
             <p class="section-desc">Configure the language model and execution settings</p>
@@ -1148,7 +1404,7 @@ with tab1:
         st.markdown("""
         <div class="custom-card">
             <div class="card-header">
-                <span style="font-size: 1.2rem;">📂</span>
+                <span style="font-size: 1.2rem;"></span>
                 <h4 class="card-title">Paths Configuration</h4>
             </div>
         """, unsafe_allow_html=True)
@@ -1177,13 +1433,13 @@ with tab1:
         st.markdown("""
         <div class="custom-card">
             <div class="card-header">
-                <span style="font-size: 1.2rem;">🤖</span>
+                <span style="font-size: 1.2rem;"></span>
                 <h4 class="card-title">Model Settings</h4>
             </div>
         """, unsafe_allow_html=True)
         
         default_model = st.selectbox(
-            "LLM Model",
+            "LLM Model (recommend: meta-llama/Llama-3.3-70B-Instruct)",
             options=[
           "Qwen/Qwen2.5-Coder-7B-Instruct",      # Best balance of speed/quality
           "Qwen/Qwen2.5-Coder-32B-Instruct",     # Higher quality
@@ -1200,7 +1456,7 @@ with tab1:
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
          "Qwen/QwQ-32B",         
             ],
-            index=4,
+            index=0,
             help="Select the Hugging Face model for code generation"
         )
         
@@ -1233,7 +1489,7 @@ with tab1:
     col_run1, col_run2, col_run3 = st.columns([1, 1, 2])
     
     with col_run1:
-        run_analysis = st.button("🚀 Run Preselection Analysis", use_container_width=True)
+        run_analysis = st.button("Run Preselection Analysis", use_container_width=True)
     
     #with col_run2:
      #   save_config = st.button("💾 Save Configuration", use_container_width=True)
@@ -1355,7 +1611,7 @@ python generated_lhco_analysis.py   full/path/to/file.lhco
                     status_placeholder.error("Analysis failed")
                     
             except Exception as e:
-                status_placeholder.error(f"❌ Error occurred: {e}")
+                status_placeholder.error(f"Error occurred: {e}")
                 st.error(f"Error running analysis: {e}")
                 import traceback
                 st.code(traceback.format_exc(), language="bash")
@@ -1375,13 +1631,13 @@ python generated_lhco_analysis.py   full/path/to/file.lhco
                                 with open(file_path, 'r') as code_file:
                                     st.code(code_file.read(), language="python")
 
-# ════════════════════════════════════════════════════════════════
-#                                                                 TAB 2: DEEP LEARNING (MLP)
-# ════════════════════════════════════════════════════════════════
+# ====================================
+# Tab 2: Deep Learnign
+# ====================================
 with tab2:
     st.markdown("""
     <div class="section-header">
-        <div class="section-icon">🧠</div>
+        <div class=""></div>
         <div>
             <h3 class="section-title">Network Architecture</h3>
             <p class="section-desc">Select and configure your deep learning network</p>
@@ -1389,12 +1645,11 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
     
-    # Model Selection
     ML_type = st.radio(
         "Select Model Type",
         options=[
             "Multi-Layer Perceptron (MLP)",
-            "Graph Neural Network (GNN)",
+            "Graph Neural Networks (GNNs)",
             "Transformer"
         ],
         index=0,
@@ -1406,14 +1661,11 @@ with tab2:
     # MLP Configuration
     if ML_type == "Multi-Layer Perceptron (MLP)":
         
-        # ════════════════════════════
-        #                      MLP ARCHITECTURE BUILDER
-        # ════════════════════════════
         st.markdown("""
         <div class="custom-card">
             <div class="card-header">
-                <span style="font-size: 1.2rem;">🏗️</span>
-                <h4 class="card-title">Network Architecture Builder</h4>
+                <span style="font-size: 1.2rem;"></span>
+                <h4 class="card-title">MLP Configuration</h4>
             </div>
         """, unsafe_allow_html=True)
         
@@ -1451,7 +1703,7 @@ with tab2:
         mlp_layers_config = []
         
         for i in range(int(num_layers)):
-            with st.expander(f"🔧 Layer {i+1} Configuration", expanded=(i < 2)):
+            with st.expander(f"Layer {i+1} Configuration", expanded=(i < 2)):
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
@@ -1504,12 +1756,12 @@ with tab2:
                 
                 mlp_layers_config.append(layer_dict)
         
-        # ════════════════════════════
-        #                      TRAINING CONFIGURATION
-        # ════════════════════════════
+        # ====================================
+        #   Configure Training
+        # ====================================
         st.markdown("""
         <div class="section-header">
-            <div class="section-icon">⚙️</div>
+            <div class=""></div>
             <div>
                 <h3 class="section-title">Training Configuration</h3>
                 <p class="section-desc">Configure training hyperparameters</p>
@@ -1523,7 +1775,7 @@ with tab2:
             st.markdown("""
             <div class="custom-card">
                 <div class="card-header">
-                    <span>📂</span>
+                    <span></span>
                     <h4 class="card-title">Data Settings</h4>
                 </div>
             """, unsafe_allow_html=True)
@@ -1536,9 +1788,9 @@ with tab2:
             
             if sig_events:
                 if os.path.exists(sig_events):
-                    st.success("✅ File found")
+                    st.success("File found")
                 else:
-                    st.error("❌ File not found")
+                    st.error("File not found")
             
             bkg_events = st.text_input(
                 "Background Events File",
@@ -1548,9 +1800,9 @@ with tab2:
             
             if bkg_events:
                 if os.path.exists(bkg_events):
-                    st.success("✅ File found")
+                    st.success("File found")
                 else:
-                    st.error("❌ File not found")
+                    st.error("File not found")
             
             train_size = st.number_input(
                 "Training Size (per class)",
@@ -1578,7 +1830,7 @@ with tab2:
             st.markdown("""
             <div class="custom-card">
                 <div class="card-header">
-                    <span>🎛️</span>
+                    <span></span>
                     <h4 class="card-title">Training Parameters</h4>
                 </div>
             """, unsafe_allow_html=True)
@@ -1625,7 +1877,7 @@ with tab2:
             st.markdown("""
             <div class="custom-card">
                 <div class="card-header">
-                    <span>🖥️</span>
+                    <span></span>
                     <h4 class="card-title">Resources & Optimization</h4>
                 </div>
             """, unsafe_allow_html=True)
@@ -1662,14 +1914,12 @@ with tab2:
             
             st.markdown("</div>", unsafe_allow_html=True)
         
-        # ════════════════════════════════════════════════════════════════════════
-        #                      ADDITIONAL SETTINGS
-        # ════════════════════════════════════════════════════════════════════════
+     
         col_add1, col_add2, col_add3, col_add4 = st.columns(4)
         
         with col_add1:
             eval_metric = st.selectbox(
-                "📊 Evaluation Metric",
+                "Evaluation Metric",
                 options=["accuracy", "auc", "f1", "recall", "precision"],
                 index=1,
                 help="Metric for model selection"
@@ -1690,14 +1940,14 @@ with tab2:
         
         with col_add3:
             early_stopping_metric = st.selectbox(
-                "📉 Stop Metric",
+                "Stop Metric",
                 options=["val_loss", "eval_metric"],
                 help="Metric to monitor for early stopping"
             )
         
         with col_add4:
             seed = st.number_input(
-                "🎲 Random Seed",
+                "Random Seed",
                 min_value=1,
                 max_value=9999,
                 value=42,
@@ -1714,26 +1964,26 @@ with tab2:
         )
         
         mlp_output_dir = st.text_input(
-            "📁 Output Directory",
+            "Output Directory",
             value="output",
             help="Directory for saving model and results"
         )
         
         st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
         
-        # ═════════════════════════════
-        #                      GENERATE CONFIG & RUN
-        # ═════════════════════════════
+        # ====================================
+        #  GNNs configuration
+       # ====================================
         col_train1, col_train2, col_train3, col_train4 = st.columns([1, 1, 1, 1])
         
         with col_train1:
-            show_config = st.button("📋 Preview Config", use_container_width=True)
+            show_config = st.button("Preview Config", use_container_width=True)
         
         with col_train2:
-            save_config = st.button("💾 Save Config", use_container_width=True)
+            save_config = st.button("Save Config", use_container_width=True)
         
         with col_train3:
-            start_training = st.button("🚀 Start Training", use_container_width=True)
+            start_training = st.button("Start Training", use_container_width=True)
         
         # Generate the configuration
         mlp_config = generate_mlp_config(
@@ -1780,11 +2030,11 @@ with tab2:
             with open(config_path, 'w') as f:
                 f.write(yaml_content)
             
-            st.success(f"✅ Configuration saved to: `{config_path}`")
+            st.success(f"Configuration saved to: `{config_path}`")
             
             # Provide download button
             st.download_button(
-                label="📥 Download Config",
+                label="Download Config",
                 data=yaml_content,
                 file_name="input_config_mlp.yml",
                 mime="text/yaml"
@@ -1799,10 +2049,10 @@ with tab2:
             with open(config_path, 'w') as f:
                 f.write(yaml_content)
             
-            st.info(f"📄 Configuration saved to: `{config_path}`")
+            st.info(f"Configuration saved to: `{config_path}`")
             
             # Run training
-            with st.spinner("🔄 Starting MLP training..."):
+            with st.spinner("Starting MLP training..."):
                 try:
                 
                     process = subprocess.Popen(
@@ -1827,25 +2077,25 @@ with tab2:
                     process.wait()
                     
                     if process.returncode == 0:
-                        st.success("✅ Training completed successfully. Please click the Results section to see the results.")
+                        st.success("Training completed successfully. Please click the Results section to see the results.")
                     else:
-                        st.error(f"❌ Training failed with exit code {process.returncode}")
+                        st.error(f"Training failed with exit code {process.returncode}")
                         
                 except Exception as e:
-                    st.error(f"❌ Error: {e}")
+                    st.error(f"Error: {e}")
                     import traceback
                     st.code(traceback.format_exc(), language="bash")
     
     ##=======
     #   GNN  ==
     ##=======
-    elif ML_type == "Graph Neural Network (GNN)":
+    elif ML_type == "Graph Neural Networks (GNNs)":
         
       
         st.markdown("""
         <div class="custom-card">
             <div class="card-header">
-                <span style="font-size: 1.2rem;">🔮</span>
+                <span style="font-size: 1.2rem;"></span>
                 <h4 class="card-title">GNN Model Selection</h4>
             </div>
         """, unsafe_allow_html=True)
@@ -1867,14 +2117,12 @@ with tab2:
         
         st.markdown("</div>", unsafe_allow_html=True)
         
-        # ════════════════════════════════════════════════════════════════════════
-        #                      GNN ARCHITECTURE BUILDER
-        # ════════════════════════════════════════════════════════════════════════
+       
         st.markdown("""
         <div class="custom-card">
             <div class="card-header">
-                <span style="font-size: 1.2rem;">🏗️</span>
-                <h4 class="card-title">GNN Architecture Builder</h4>
+                <span style="font-size: 1.2rem;"></span>
+                <h4 class="card-title">GNN Configuration</h4>
             </div>
         """, unsafe_allow_html=True)
         
@@ -1923,7 +2171,7 @@ with tab2:
         gnn_layers_config = []
         
         for i in range(int(gnn_num_layers)):
-            with st.expander(f"🔧 GNN Layer {i+1} Configuration", expanded=(i < 2)):
+            with st.expander(f"GNN Layer {i+1} Configuration", expanded=(i < 2)):
                 col1, col2, col3, col4 = st.columns(4)
                 
                 layer_dict = {}
@@ -2048,12 +2296,12 @@ with tab2:
                 
                 gnn_layers_config.append(layer_dict)
         
-        # ══════════════════════════════
-        #                      GNN TRAINING CONFIGURATION
-        # ══════════════════════════════
+        # ====================================
+        #   GNN training configuration
+        # ====================================
         st.markdown("""
         <div class="section-header">
-            <div class="section-icon">⚙️</div>
+            <div class=""></div>
             <div>
                 <h3 class="section-title">Training Configuration</h3>
                 <p class="section-desc">Configure training hyperparameters</p>
@@ -2067,7 +2315,7 @@ with tab2:
             st.markdown("""
             <div class="custom-card">
                 <div class="card-header">
-                    <span>📂</span>
+                    <span></span>
                     <h4 class="card-title">Data Settings</h4>
                 </div>
             """, unsafe_allow_html=True)
@@ -2081,9 +2329,9 @@ with tab2:
             
             if gnn_sig_events:
                 if os.path.exists(gnn_sig_events):
-                    st.success("✅ File found")
+                    st.success("File found")
                 else:
-                    st.error("❌ File not found")
+                    st.error("File not found")
             
             gnn_bkg_events = st.text_input(
                 "Background Events File",
@@ -2094,9 +2342,9 @@ with tab2:
             
             if gnn_bkg_events:
                 if os.path.exists(gnn_bkg_events):
-                    st.success("✅ File found")
+                    st.success("File found")
                 else:
-                    st.error("❌ File not found")
+                    st.error("File not found")
             
             gnn_train_size = st.number_input(
                 "Training Size (per class)",
@@ -2126,7 +2374,7 @@ with tab2:
             st.markdown("""
             <div class="custom-card">
                 <div class="card-header">
-                    <span>🎛️</span>
+                    <span></span>
                     <h4 class="card-title">Training Parameters</h4>
                 </div>
             """, unsafe_allow_html=True)
@@ -2217,9 +2465,7 @@ with tab2:
             
             st.markdown("</div>", unsafe_allow_html=True)
         
-        # ════════════════════════════════════════════════════════════════════════
-        #                      GNN ADDITIONAL SETTINGS
-        # ════════════════════════════════════════════════════════════════════════
+        
         col_add1, col_add2, col_add3, col_add4 = st.columns(4)
         
         with col_add1:
@@ -2234,7 +2480,7 @@ with tab2:
             gnn_early_stopping = st.checkbox("Early Stopping", value=True, key="gnn_early_stopping")
             if gnn_early_stopping:
                 gnn_patience = st.number_input(
-                    "⏱️ Patience",
+                    "Patience",
                     min_value=1,
                     max_value=50,
                     value=5,
@@ -2245,14 +2491,14 @@ with tab2:
         
         with col_add3:
             gnn_early_stopping_metric = st.selectbox(
-                "📉 Stop Metric",
+                "Stop Metric",
                 options=["val_loss", "eval_metric"],
                 key="gnn_es_metric"
             )
         
         with col_add4:
             gnn_seed = st.number_input(
-                "🎲 Random Seed",
+                "Random Seed",
                 min_value=1,
                 max_value=9999,
                 value=42,
@@ -2264,7 +2510,7 @@ with tab2:
         
         with col_graph1:
             nodes_per_graph = st.number_input(
-                "🔵 Number of particles per graph",
+                "Number of particles per graph",
                 min_value=1,
                 max_value=100,
                 value=4,
@@ -2285,7 +2531,7 @@ with tab2:
             )
         
         gnn_output_dir = st.text_input(
-            "📁 Output Directory",
+            "Output Directory",
             value="output",
             key="gnn_output_dir",
             help="Directory for saving model and results"
@@ -2293,19 +2539,19 @@ with tab2:
         
         st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
         
-        # ═══════════════════════
-        #                      GNN training
-        # ═══════════════════════
+        # ====================================
+        #     Gnn Training
+        # ====================================
         col_train1, col_train2, col_train3, col_train4 = st.columns([1, 1, 1, 1])
         
         with col_train1:
-            gnn_show_config = st.button("📋 Preview Config", use_container_width=True, key="gnn_preview")
+            gnn_show_config = st.button("Preview Config", use_container_width=True, key="gnn_preview")
         
         with col_train2:
-            gnn_save_config = st.button("💾 Save Config", use_container_width=True, key="gnn_save")
+            gnn_save_config = st.button("Save Config", use_container_width=True, key="gnn_save")
         
         with col_train3:
-            gnn_start_training = st.button("🚀 Start Training", use_container_width=True, key="gnn_train")
+            gnn_start_training = st.button("Start Training", use_container_width=True, key="gnn_train")
         
         # Generate the GNN configuration
         gnn_config = generate_gnn_config(
@@ -2354,7 +2600,7 @@ with tab2:
             with open(config_path, 'w') as f:
                 f.write(gnn_yaml_content)
             
-            st.success(f"✅ Configuration saved to: `{config_path}`")
+            st.success(f"Configuration saved to: `{config_path}`")
             
             # Provide download button
             st.download_button(
@@ -2373,10 +2619,10 @@ with tab2:
             with open(config_path, 'w') as f:
                 f.write(gnn_yaml_content)
             
-            st.info(f"📄 Configuration saved to: `{config_path}`")
+            st.info(f"Configuration saved to: `{config_path}`")
             
             # Run training
-            with st.spinner("🔄 Starting GNN training..."):
+            with st.spinner("Starting GNN training..."):
                 try:
                     # Run the GNN training script
                     process = subprocess.Popen(
@@ -2401,25 +2647,512 @@ with tab2:
                     process.wait()
                     
                     if process.returncode == 0:
-                        st.success("✅ Training completed successfully. . Please click the Results section to see the results.")
+                        st.success("Training completed successfully. . Please click the Results section to see the results.")
                     else:
-                        st.error(f"❌ Training failed with exit code {process.returncode}")
+                        st.error(f"Training failed with exit code {process.returncode}")
                         
                 except Exception as e:
-                    st.error(f"❌ Error: {e}")
+                    st.error(f"Error: {e}")
                     import traceback
                     st.code(traceback.format_exc(), language="bash")
     
-    else:
-        st.info("🚧 Transformer configuration coming soon! This feature is under development.")
+    ##=======
+    #   TRANSFORMER  ==
+    ##=======
+    elif ML_type == "Transformer":
+        
+        #st.markdown("""
+        #<div class="custom-card">
+         #   <div class="card-header">
+          #      <span style="font-size: 1.2rem;"></span>
+           #     <h4 class="card-title">Transformer  Configuration</h4>
+            #</div>
+        #""", unsafe_allow_html=True)
+        #
+        #st.info("**Particle Cloud Transformer** - Uses self-attention over particles followed by pooling for cloud-level prediction.")
+        #
+       # st.markdown("</div>", unsafe_allow_html=True)
+        
+        
+        st.markdown("""
+        <div class="custom-card">
+            <div class="card-header">
+                <span style="font-size: 1.2rem;"></span>
+                <h4 class="card-title">Transformer Configuration</h4>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        col_tr_arch1, col_tr_arch2, col_tr_arch3 = st.columns([1, 1, 1])
+        
+        with col_tr_arch1:
+            tr_embed_dim = st.selectbox(
+                "Embedding Dimension",
+                options=[64, 128, 256, 512],
+                index=1,
+                key="tr_embed_dim",
+                help="Dimension of the embedding space"
+            )
+            
+            tr_num_heads = st.selectbox(
+                "Number of Attention Heads",
+                options=[1, 2, 4, 8, 16],
+                index=3,
+                key="tr_num_heads",
+                help="Number of attention heads (must divide embed_dim)"
+            )
+        
+        with col_tr_arch2:
+            tr_num_layers = st.number_input(
+                "Number of Transformer Layers",
+                min_value=1,
+                max_value=12,
+                value=4,
+                step=1,
+                key="tr_num_layers",
+                help="Number of transformer encoder layers"
+            )
+            
+            tr_ffn_dim = st.selectbox(
+                "FFN Dimension",
+                options=[128, 256, 512, 1024, 2048],
+                index=1,
+                key="tr_ffn_dim",
+                help="Feed-forward network hidden dimension"
+            )
+        
+        with col_tr_arch3:
+            tr_pooling = st.selectbox(
+                "Pooling Method",
+                options=["mean", "max", "attention"],
+                index=0,
+                key="tr_pooling",
+                help="mean/max: pooling over sequence, attention: learnable query"
+            )
+            
+            tr_num_classes = st.selectbox(
+                "Output Classes",
+                options=2,
+                key="tr_num_classes",
+                help="2 for binary classification"
+            )
+        
+        # Advanced architecture options
+        col_tr_adv1, col_tr_adv2, col_tr_adv3 = st.columns(3)
+        
+        with col_tr_adv1:
+            tr_dropout = st.slider(
+                "Dropout Rate",
+                min_value=0.0,
+                max_value=0.5,
+                value=0.1,
+                step=0.05,
+                key="tr_dropout",
+                help="General dropout rate"
+            )
+        
+        with col_tr_adv2:
+            tr_attention_dropout = st.slider(
+                "Attention Dropout",
+                min_value=0.0,
+                max_value=0.5,
+                value=0.1,
+                step=0.05,
+                key="tr_attention_dropout",
+                help="Dropout on attention weights"
+            )
+        
+        with col_tr_adv3:
+            tr_pre_norm = st.checkbox(
+                "Pre-Normalization",
+                value=True,
+                key="tr_pre_norm",
+                help="Use pre-normalization (more stable training)"
+            )
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
 
-# ═══════════════════════════
-#                          TAB 3: RESULTS
-# ═══════════════════════════
+        st.markdown("""
+        <div class="section-header">
+            <div class=""></div>
+            <div>
+                <h3 class="section-title">Training Configuration</h3>
+                <p class="section-desc">Configure training hyperparameters</p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.markdown("""
+            <div class="custom-card">
+                <div class="card-header">
+                    <span></span>
+                    <h4 class="card-title">Data Settings</h4>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            tr_sig_events = st.text_input(
+                "Signal Events File",
+                placeholder="/path/to/signal_clouds.csv",
+                key="tr_sig_events",
+                help="Path to signal particle cloud data (CSV)"
+            )
+            
+            if tr_sig_events:
+                if os.path.exists(tr_sig_events):
+                    st.success("File found")
+                else:
+                    st.error("File not found")
+            
+            tr_bkg_events = st.text_input(
+                "Background Events File",
+                placeholder="/path/to/background_clouds.csv",
+                key="tr_bkg_events",
+                help="Path to background particle cloud data (CSV)"
+            )
+            
+            if tr_bkg_events:
+                if os.path.exists(tr_bkg_events):
+                    st.success("File found")
+                else:
+                    st.error("File not found")
+            
+            tr_train_size = st.number_input(
+                "Training Size (per class)",
+                min_value=1000,
+                max_value=1000000,
+                value=1000,
+                step=10,
+                key="tr_train_size",
+                help="Number of clouds per class for training"
+            )
+            
+            tr_test_size = st.number_input(
+                "Test Size (per class)",
+                min_value=1000,
+                max_value=500000,
+                value=1000,
+                step=10,
+                key="tr_test_size",
+                help="Number of clouds per class for testing"
+            )
+            
+            tr_normalize = st.checkbox("Normalize Features", value=True, key="tr_normalize")
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("""
+            <div class="custom-card">
+                <div class="card-header">
+                    <span></span>
+                    <h4 class="card-title">Training Parameters</h4>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            tr_epochs = st.number_input(
+                "Epochs",
+                min_value=1,
+                max_value=1000,
+                value=10,
+                key="tr_epochs",
+                help="Number of training epochs"
+            )
+            
+            tr_batch_size = st.select_slider(
+                "Batch Size",
+                options=np.arange(10,2001,1),
+                value=64,
+                key="tr_batch_size",
+                help="Number of clouds per batch"
+            )
+            
+            tr_optimizer = st.selectbox(
+                "Optimizer",
+                options=["adamw", "adam", "sgd"],
+                index=0,
+                key="tr_optimizer",
+                help="AdamW is recommended for Transformers"
+            )
+            
+            tr_lr = st.select_slider(
+                "Learning Rate",
+                options=np.arange(1e-6,1e-2,1e-6),
+                value=1e-4,
+                key="tr_lr",
+                format_func=lambda x: f"{x:.0e}"
+            )
+            
+            tr_weight_decay = st.select_slider(
+                "Weight Decay (L2)",
+                options=[0.0, 1e-5, 1e-4, 1e-3, 1e-2, 0.1],
+                value=1e-2,
+                key="tr_weight_decay",
+                format_func=lambda x: f"{x:.0e}" if x > 0 else "0"
+            )
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown("""
+            <div class="custom-card">
+                <div class="card-header">
+                    <span></span>
+                    <h4 class="card-title">Resources & Optimization</h4>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            tr_device = st.selectbox(
+                "Hardware Device",
+                options=["auto", "cpu", "cuda", "cuda:0", "cuda:1"],
+                key="tr_device",
+                help="Select computing device"
+            )
+            
+            tr_precision = st.selectbox(
+                "Training Precision",
+                options=["float32", "float16", "mixed"],
+                key="tr_precision",
+                help="Numerical precision for training"
+            )
+            
+            tr_gradient_clip = st.slider(
+                "Gradient Clipping",
+                min_value=0.0,
+                max_value=5.0,
+                value=1.0,
+                step=0.1,
+                key="tr_gradient_clip",
+                help="Gradient clipping value (important for Transformers)"
+            )
+            
+            tr_scheduler = st.selectbox(
+                "LR Scheduler",
+                options=["none", "step", "plateau", "cosine", "cosine_warmup", "onecycle"],
+                index=3,
+                key="tr_scheduler",
+                help="Learning rate scheduler type"
+            )
+            
+            
+            tr_scheduler_params = {}
+            if tr_scheduler == "step":
+                tr_scheduler_params["step_size"] = st.number_input("Step Size", min_value=1, value=10, key="tr_sched_step")
+                tr_scheduler_params["gamma"] = st.number_input("Gamma", min_value=0.01, max_value=1.0, value=0.1, key="tr_sched_gamma")
+            elif tr_scheduler == "plateau":
+                tr_scheduler_params["patience"] = st.number_input("Scheduler Patience", min_value=1, value=5, key="tr_sched_patience")
+                tr_scheduler_params["min_lr"] = st.number_input("Min LR", min_value=1e-8, value=1e-6, format="%.0e", key="tr_sched_minlr")
+            elif tr_scheduler == "onecycle":
+                tr_scheduler_params["max_lr"] = st.number_input("Max LR", min_value=1e-4, value=0.01, format="%.0e", key="tr_sched_maxlr")
+            elif tr_scheduler == "cosine_warmup":
+                tr_scheduler_params["warmup_steps"] = st.number_input("Warmup Steps", min_value=0, value=100, key="tr_sched_warmup")
+                tr_scheduler_params["min_lr"] = st.number_input("Min LR", min_value=1e-8, value=1e-6, format="%.0e", key="tr_sched_minlr_cw")
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+       
+        col_add1, col_add2, col_add3, col_add4 = st.columns(4)
+        
+        with col_add1:
+            tr_eval_metric = st.selectbox(
+                "Evaluation Metric",
+                options=["accuracy", "auc", "f1", "recall", "precision"],
+                index=1,
+                key="tr_eval_metric"
+            )
+        
+        with col_add2:
+            tr_early_stopping = st.checkbox("Early Stopping", value=True, key="tr_early_stopping")
+            if tr_early_stopping:
+                tr_patience = st.number_input(
+                    "Patience",
+                    min_value=1,
+                    max_value=50,
+                    value=5,
+                    key="tr_patience"
+                )
+            else:
+                tr_patience = 5
+        
+        with col_add3:
+            tr_early_stopping_metric = st.selectbox(
+                "Stop Metric",
+                options=["val_loss", "eval_metric"],
+                key="tr_es_metric"
+            )
+        
+        with col_add4:
+            tr_seed = st.number_input(
+                "Random Seed",
+                min_value=1,
+                max_value=9999,
+                value=42,
+                key="tr_seed"
+            )
+        
+        # Cloud-specific settings
+        col_cloud1, col_cloud2 = st.columns(2)
+        
+        with col_cloud1:
+            particles_per_cloud = st.number_input(
+                "Number of particles per cloud",
+                min_value=1,
+                max_value=100,
+                value=4,
+                key="particles_per_cloud",
+                help="Number of particles in each cloud"
+            )
+        
+        with col_cloud2:
+            tr_validation_ratio = st.slider(
+                "Validation Split Ratio",
+                min_value=0.05,
+                max_value=0.3,
+                value=0.15,
+                step=0.005,
+                key="tr_val_ratio"
+            )
+        
+        tr_output_dir = st.text_input(
+            "Output Directory",
+            value="output",
+            key="tr_output_dir",
+            help="Directory for saving model and results"
+        )
+        
+        st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
+        
+        # ====================================
+        #                      Transformer training
+        # ====================================
+        col_train1, col_train2, col_train3, col_train4 = st.columns([1, 1, 1, 1])
+        
+        with col_train1:
+            tr_show_config = st.button("Preview Config", use_container_width=True, key="tr_preview")
+        
+        with col_train2:
+            tr_save_config = st.button("Save Config", use_container_width=True, key="tr_save")
+        
+        with col_train3:
+            tr_start_training = st.button("Start Training", use_container_width=True, key="tr_train")
+        
+        # Generate the Transformer configuration
+        tr_config = generate_transformer_config(
+            seed=tr_seed,
+            output_dir=tr_output_dir,
+            signal_path=tr_sig_events or "/path/to/signal_clouds.csv",
+            background_path=tr_bkg_events or "/path/to/background_clouds.csv",
+            train_size=tr_train_size,
+            test_size=tr_test_size,
+            val_ratio=tr_validation_ratio,
+            normalize=tr_normalize,
+            particles_per_cloud=particles_per_cloud,
+            embed_dim=tr_embed_dim,
+            num_heads=tr_num_heads,
+            num_layers=tr_num_layers,
+            ffn_dim=tr_ffn_dim,
+            dropout=tr_dropout,
+            attention_dropout=tr_attention_dropout,
+            pooling=tr_pooling,
+            num_classes=tr_num_classes,
+            pre_norm=tr_pre_norm,
+            epochs=tr_epochs,
+            batch_size=tr_batch_size,
+            learning_rate=tr_lr,
+            weight_decay=tr_weight_decay,
+            optimizer=tr_optimizer,
+            device=tr_device,
+            early_stopping=tr_early_stopping,
+            early_stopping_patience=tr_patience,
+            early_stopping_metric=tr_early_stopping_metric,
+            precision=tr_precision,
+            scheduler_type=tr_scheduler,
+            scheduler_params=tr_scheduler_params,
+            eval_metric=tr_eval_metric,
+            gradient_clip=tr_gradient_clip
+        )
+        
+        tr_yaml_content = transformer_config_to_yaml(tr_config)
+        
+        if tr_show_config:
+            st.markdown("### 📄 Transformer Configuration Preview")
+            st.code(tr_yaml_content, language="yaml")
+        
+        if tr_save_config:
+            config_filename = "input_config_transformer.yml"
+            config_path = os.path.join(tr_output_dir, config_filename)
+            
+            # Create output directory if it doesn't exist
+            os.makedirs(tr_output_dir, exist_ok=True)
+            
+            with open(config_path, 'w') as f:
+                f.write(tr_yaml_content)
+            
+            st.success(f"Configuration saved to: `{config_path}`")
+            
+            # Provide download button
+            st.download_button(
+                label="Download Config",
+                data=tr_yaml_content,
+                file_name="input_config_transformer.yml",
+                mime="text/yaml",
+                key="tr_download"
+            )
+        
+        if tr_start_training:
+            config_filename = "input_config_transformer.yml"
+            config_path = os.path.join(tr_output_dir, config_filename)
+            os.makedirs(tr_output_dir, exist_ok=True)
+            
+            with open(config_path, 'w') as f:
+                f.write(tr_yaml_content)
+            
+            st.info(f"Configuration saved to: `{config_path}`")
+            
+            # Run training
+            with st.spinner("Starting Transformer training..."):
+                try:
+                    
+                    process = subprocess.Popen(
+                        [sys.executable, '-m', 'source.DL.Transformer.main_transformer', '--config', config_path],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        text=True,
+                        bufsize=1,
+                        cwd=_project_root,
+                        env={**os.environ, 'PYTHONUNBUFFERED': '1'}
+                    )
+                    
+                    # Terminal output
+                    terminal_output = st.empty()
+                    output_lines = []
+                    
+                    for line in iter(process.stdout.readline, ''):
+                        if line:
+                            output_lines.append(line.rstrip())
+                            terminal_output.code('\n'.join(output_lines[-30:]), language="bash")
+                    
+                    process.wait()
+                    
+                    if process.returncode == 0:
+                        st.success("Training completed successfully. Please click the Results section to see the results.")
+                    else:
+                        st.error(f"Training failed with exit code {process.returncode}")
+                        
+                except Exception as e:
+                    st.error(f"Error: {e}")
+                    import traceback
+                    st.code(traceback.format_exc(), language="bash")
+
+# =====================================
+#                          Results Tab
+# =====================================
 with tab3:
     st.markdown("""
     <div class="section-header">
-        <div class="section-icon">📊</div>
+        <div class=""></div>
         <div>
             <h3 class="section-title">Analysis Results</h3>
             <p class="section-desc">View training metrics and model performance</p>
@@ -2438,7 +3171,9 @@ with tab3:
         )
     
     with col_res2:
-        load_results = st.button("🔄 Load Results", use_container_width=True)
+        load_results = st.button("Load Results", use_container_width=True)
+    results_file = None
+    results_data = None
     
     if start_training:
         results_file = os.path.join(results_dir, "results_mlp.json")
@@ -2446,29 +3181,32 @@ with tab3:
     elif gnn_start_training:
         results_file = os.path.join(results_dir, "results_gnn.json")
         results_data = None
-    else:
-        results_file = os.path.join(results_dir, "results_mlp.json")
+    elif tr_start_training:
+        results_file = os.path.join(results_dir, "results_transformer.json")
         results_data = None
     
     # Auto-load or load on button click
-    if os.path.exists(results_file):
-        try:
-            with open(results_file, 'r') as f:
-                results_data = json.load(f)
+    if results_file is not None:
+        if os.path.exists(results_file):
+            try:
+                with open(results_file, 'r') as f:
+                    results_data = json.load(f)
             
-            if load_results:
-                st.success(f"✅ Results loaded from: `{results_file}`")
-        except Exception as e:
-            st.error(f"❌ Error loading results: {e}")
-    elif load_results:
-        st.warning(f"⚠️ Results file not found: `{results_file}`")
-    
+                if load_results:
+                    st.success(f"Results loaded from: `{results_file}`")
+            except Exception as e:
+                st.error(f"Error loading results: {e}")
+        elif load_results:
+            st.warning(f"Results file not found: `{results_file}`")
+    else:
+        if load_results:
+            st.warning("No training mode selected, so no results file to load.")
     st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
     
     if results_data:
-        # ═════════════════════════════
-        #                      TEST METRICS DISPLAY
-        # ════════════════════════════
+        # ====================================
+        #                      Test results
+        # ====================================
         test_metrics = results_data.get("test_metrics", {})
         history = results_data.get("history", {})
         
@@ -2554,9 +3292,9 @@ with tab3:
         
         st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
         
-        # ═══════════════════════════════#
-        #                      TRAINING HISTORY PLOTS
-        # ═══════════════════════════════#
+        # ====================================
+        #                      Result plots
+        # ====================================
         st.markdown("""
         <div class="section-header">
             <div class="section-icon">📈</div>
@@ -2590,8 +3328,8 @@ with tab3:
             'f1': '#f59e0b',         # Warning orange
             'precision': '#ec4899',  # Pink
             'recall': '#0ea5e9',     # Cyan
-            'grid': '#3a3a4a',       # Grid color
-            'bg': '#1e1e30'          # Card background
+            'grid': '#454560',       # Grid color
+            'bg': '#2a2a45'          # Card background
         }
         
         # Row 1: Loss and Accuracy plots
@@ -2815,9 +3553,9 @@ with tab3:
         
         st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
         
-        # ════════════════════════════
-        #                      COMBINED METRICS PLOT
-        # ════════════════════════════
+       
+        #COMBINED METRICS PLOT
+        
         st.markdown("""
         <div class="section-header">
             <div class="section-icon">📊</div>
@@ -2868,9 +3606,7 @@ with tab3:
         
         st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
         
-        # ════════════════════════ #
-        #                      RAW DATA DISPLAY             #
-        # ════════════════════════  #
+       
         with st.expander("📋 View Raw Results Data"):
             st.json(results_data)
         
@@ -2884,7 +3620,7 @@ with tab3:
         st.markdown("""
         <div style="
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
-            border: 1px dashed #3a3a4a;
+            border: 1px dashed #454560;
             border-radius: 16px;
             padding: 4rem;
             text-align: center;

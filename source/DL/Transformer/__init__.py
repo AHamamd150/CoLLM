@@ -1,9 +1,3 @@
-"""
-Particle Cloud Transformer Training Package
-
-Transformer-based model for particle cloud classification.
-"""
-
 from .config_transformer import (
     load_transformer_config, 
     TransformerConfig, 
@@ -26,14 +20,10 @@ from .model_transformer import (
 from .train_transformer import train, evaluate, get_device
 
 __all__ = [
-    # Config
     'load_transformer_config', 'TransformerConfig', 'TransformerModelConfig', 
     'DataConfig', 'TrainConfig',
-    # Data
-    'load_cloud_data', 'create_cloud_dataloaders', 'ParticleCloud', 'ParticleCloudDataset',
-    # Model
+    'load_cloud_data', 'create_cloud_dataloaders', 'ParticleCloud', 'ParticleCloudDataset', 
     'build_transformer_model', 'ParticleCloudTransformer', 
     'MultiHeadSelfAttention', 'TransformerBlock',
-    # Training
     'train', 'evaluate', 'get_device',
 ]

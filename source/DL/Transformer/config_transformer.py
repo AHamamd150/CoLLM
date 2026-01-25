@@ -1,9 +1,3 @@
-"""
-Transformer Configuration Module
-
-Dataclasses and parser for Particle Cloud Transformer training configuration.
-"""
-
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any
 import yaml
@@ -16,7 +10,7 @@ class DataConfig:
     background_path: str
     train_size: int
     test_size: int
-    particles_per_cloud: int  # Number of particles (rows) per cloud
+    particles_per_cloud: int  
     val_ratio: float = 0.15
     normalize: bool = True
 
@@ -24,17 +18,14 @@ class DataConfig:
 @dataclass
 class TransformerModelConfig:
     """Transformer model configuration."""
-    embed_dim: int = 128           # Embedding dimension
-    num_heads: int = 8             # Number of attention heads
-    num_layers: int = 4            # Number of transformer layers
-    ffn_dim: int = 256             # Feed-forward network dimension
-    dropout: float = 0.1           # Dropout rate
-    attention_dropout: float = 0.1 # Attention dropout
-    pooling: str = "cls"           # cls, mean, max
+    embed_dim: int = 128           
+    num_heads: int = 8             
+    num_layers: int = 4            
+    ffn_dim: int = 256             
+    dropout: float = 0.1           
+    attention_dropout: float = 0.1 
+    pooling: str = "mean"          # mean, max, attention
     num_classes: int = 2
-    
-    # Positional encoding
-    use_pos_encoding: bool = False  # Particle clouds are permutation invariant
     
     # Layer norm
     pre_norm: bool = True          # Pre-normalization (more stable)
@@ -42,14 +33,13 @@ class TransformerModelConfig:
 
 @dataclass
 class SchedulerConfig:
-    """Learning rate scheduler configuration."""
     type: str = "none"
     step_size: int = 10
     gamma: float = 0.1
     patience: int = 5
     min_lr: float = 1e-6
     max_lr: Optional[float] = None
-    warmup_steps: int = 0          # Warmup steps for transformer
+    warmup_steps: int = 0          
 
 
 @dataclass
@@ -57,9 +47,9 @@ class TrainConfig:
     """Training configuration."""
     epochs: int = 50
     batch_size: int = 32
-    learning_rate: float = 0.0001  # Transformers typically use smaller LR
-    weight_decay: float = 0.01     # Transformers benefit from weight decay
-    optimizer: str = "adamw"       # AdamW is standard for transformers
+    learning_rate: float = 0.0001  
+    weight_decay: float = 0.01     
+    optimizer: str = "adamw"       
     device: str = "auto"
     
     early_stopping: bool = False
@@ -70,13 +60,12 @@ class TrainConfig:
     scheduler: SchedulerConfig = field(default_factory=SchedulerConfig)
     eval_metric: str = "accuracy"
     
-    # Gradient clipping (important for transformers)
+
     gradient_clip: float = 1.0
 
 
 @dataclass
 class TransformerConfig:
-    """Complete Transformer configuration."""
     data: DataConfig
     model: TransformerModelConfig
     train: TrainConfig
@@ -85,7 +74,6 @@ class TransformerConfig:
 
 
 def parse_scheduler(raw: Optional[Dict[str, Any]]) -> SchedulerConfig:
-    """Parse scheduler configuration."""
     if raw is None:
         return SchedulerConfig()
     return SchedulerConfig(
@@ -100,7 +88,7 @@ def parse_scheduler(raw: Optional[Dict[str, Any]]) -> SchedulerConfig:
 
 
 def load_transformer_config(path: str) -> TransformerConfig:
-    """Load Transformer configuration from YAML file."""
+
     with open(path, 'r') as f:
         raw = yaml.safe_load(f)
     
@@ -124,9 +112,8 @@ def load_transformer_config(path: str) -> TransformerConfig:
         ffn_dim=model_raw.get('ffn_dim', 256),
         dropout=model_raw.get('dropout', 0.1),
         attention_dropout=model_raw.get('attention_dropout', 0.1),
-        pooling=model_raw.get('pooling', 'cls').lower(),
+        pooling=model_raw.get('pooling', 'mean').lower(),
         num_classes=model_raw.get('num_classes', 2),
-        use_pos_encoding=model_raw.get('use_pos_encoding', False),
         pre_norm=model_raw.get('pre_norm', True),
     )
     

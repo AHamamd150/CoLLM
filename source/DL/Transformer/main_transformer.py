@@ -1,12 +1,3 @@
-"""
-Main Particle Cloud Transformer Training Script
-
-Train Transformer model for particle cloud classification.
-
-Usage:
-    python -m transformer.main_transformer --config config.yaml
-"""
-
 import argparse
 import os
 import json
@@ -20,7 +11,7 @@ from .train_transformer import train, evaluate, get_device
 
 
 def set_seed(seed: int):
-    """Set random seeds for reproducibility."""
+
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
@@ -35,9 +26,9 @@ def main():
     args = parser.parse_args()
     
     # Load config
-    print("=" * 70)
-    print("PARTICLE CLOUD TRANSFORMER")
-    print("=" * 70)
+    print("=" * 40)
+    print("Transformer for Particle claud analysis")
+    print("=" * 40)
     print(f"Config: {args.config}")
     cfg = load_transformer_config(args.config)
     
@@ -49,10 +40,10 @@ def main():
     device = get_device(cfg.train.device)
     
     # Load data
-    print("\n" + "=" * 70)
+    print("\n" + "=" * 40)
     print("DATA")
-    print("=" * 70)
-    train_clouds, val_clouds, test_clouds, num_features, scaler = load_cloud_data(
+    print("=" * 40)
+    train_clouds, val_clouds, test_clouds, num_features, particles_per_cloud, scaler = load_cloud_data(
         cfg.data, cfg.data.particles_per_cloud
     )
     
@@ -63,9 +54,9 @@ def main():
     )
     
     # Build model
-    print("\n" + "=" * 70)
-    print("MODEL")
-    print("=" * 70)
+    print("\n" + "=" * 40)
+    print("Model")
+    print("=" * 40)
     
     model = build_transformer_model(
         num_features=num_features,
@@ -77,19 +68,18 @@ def main():
         dropout=cfg.model.dropout,
         attention_dropout=cfg.model.attention_dropout,
         pooling=cfg.model.pooling,
-        use_pos_encoding=cfg.model.use_pos_encoding,
         pre_norm=cfg.model.pre_norm,
     ).to(device)
     
     # Train
-    print("\n" + "=" * 70)
-    print("TRAINING")
-    print("=" * 70)
+    print("\n" + "=" * 40)
+    print("Training")
+    print("=" * 40)
     history = train(model, train_loader, val_loader, cfg.train, device)
     
     # Test
     print("\n" + "=" * 70)
-    print("TEST RESULTS")
+    print("Test results")
     print("=" * 70)
     test_metrics = evaluate(model, test_loader, torch.nn.CrossEntropyLoss(), device)
     
@@ -100,10 +90,9 @@ def main():
     print(f"  Recall:    {test_metrics['recall']:.4f}")
     print(f"  F1:        {test_metrics['f1']:.4f}")
     
-    # Save results
+
     os.makedirs(cfg.output_dir, exist_ok=True)
     
-    # Save model
     model_path = os.path.join(cfg.output_dir, "model_transformer.pt")
     torch.save({
         "model": model.state_dict(),

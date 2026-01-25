@@ -14,12 +14,14 @@ usage() {
     echo "  ./run.sh --run_GUI"
     echo "  ./run.sh --run_MLP --input <path_to_config_yaml>"
     echo "  ./run.sh --run_GNN --input <path_to_config_yaml>"
+    echo "  ./run.sh --run_Transformer --input <path_to_config_yaml>"
     echo ""
     echo "Options:"
     echo "  --run_TUI       Run the TUI mode"
     echo "  --run_GUI       Run the Streamlit GUI mode"
     echo "  --run_MLP       Run the MLP deep learning mode"
     echo "  --run_GNN       Run the GNN deep learning mode"
+    echo "  --run_Transformer       Run the Transformer deep learning mode"
     echo "  --input FILE    Path to the input file (required for TUI, MLP, and GNN modes)"
     echo "  --help          Display this help message"
     exit 1
@@ -64,6 +66,10 @@ while [[ $# -gt 0 ]]; do
             RUN_GNN=true
             shift
             ;;
+        --run_Transformer)
+            RUN_Transformer=true
+            shift
+            ;;    
         --input)
             INPUT_FILE="$2"
             shift 2
@@ -145,6 +151,25 @@ if [ "$RUN_GNN" = true ]; then
 
     echo "Starting GNN training with config: $INPUT_FILE"
     python -m source.DL.GNN.main_gnn --config "$INPUT_FILE"
+    exit 0
+fi
+
+# Run Transformer mode
+if [ "$RUN_Transformer" = true ]; then
+    echo "Checking requirements..."
+    python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    if [ -z "$INPUT_FILE" ]; then
+        echo "Error: --input is required when using --run_Transformer"
+        usage
+    fi
+
+    if [ ! -f "$INPUT_FILE" ]; then
+        echo "Error: Configuration file '$INPUT_FILE' not found"
+        exit 1
+    fi
+
+    echo "Starting Transformer training with config: $INPUT_FILE"
+    python -m source.DL.Transformer.main_transformer --config "$INPUT_FILE"
     exit 0
 fi
 

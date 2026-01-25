@@ -1,11 +1,3 @@
-"""
-Particle Cloud Data Loading Module
-
-Loads CSV data and creates particle cloud datasets for Transformer.
-CSV format: features in columns, last column is cloud_id.
-Each cloud has a fixed number of particles (rows with same cloud_id).
-"""
-
 from typing import Tuple, List, Optional
 import numpy as np
 import torch
@@ -13,7 +5,6 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class StandardScaler:
-    """Standard scaler for particle features."""
     
     def __init__(self):
         self.mean_ = None
@@ -34,11 +25,10 @@ class StandardScaler:
 
 
 class ParticleCloud:
-    """Simple container for a single particle cloud."""
     
     def __init__(self, x: torch.Tensor, y: torch.Tensor):
         self.x = x    # [num_particles, num_features]
-        self.y = y    # scalar label
+        self.y = y    #  labels
         self.num_particles = x.size(0)
     
     def to(self, device):
@@ -48,9 +38,7 @@ class ParticleCloud:
         )
 
 
-class ParticleCloudDataset(Dataset):
-    """Dataset of particle clouds."""
-    
+class ParticleCloudDataset(Dataset):    
     def __init__(self, clouds: List[ParticleCloud]):
         self.clouds = clouds
     
@@ -64,7 +52,7 @@ class ParticleCloudDataset(Dataset):
 
 def collate_clouds(batch) -> Tuple[torch.Tensor, torch.Tensor]:
     """
-    Collate function for DataLoader.
+    DataLoader.
     
     Returns:
         x: [batch_size, num_particles, num_features]
@@ -77,13 +65,7 @@ def collate_clouds(batch) -> Tuple[torch.Tensor, torch.Tensor]:
 
 
 def load_csv(path: str) -> Tuple[List[str], np.ndarray]:
-    """
-    Load CSV file without headers.
     
-    Returns:
-        columns: auto-generated column names
-        data: numpy array of shape (N, D)
-    """
     data = np.loadtxt(path, delimiter=",")
     
     if data.ndim == 1:
@@ -96,33 +78,24 @@ def load_csv(path: str) -> Tuple[List[str], np.ndarray]:
 
 
 def parse_clouds_from_csv(data: np.ndarray, particles_per_cloud: int) -> Tuple[List[np.ndarray], List[int]]:
-    """
-    Parse CSV data into individual particle clouds.
+
+    if particles_per_cloud <= 0:
+        raise ValueError(f"Invalid number for particles per cloud: {particles_per_cloud}")
     
-    Args:
-        data: [N, D+1] array where last column is cloud_id
-        particles_per_cloud: expected number of particles per cloud
-        
-    Returns:
-        features_list: list of [particles_per_cloud, D] arrays
-        cloud_ids: list of cloud identifiers
-    """
-    # Last column is cloud_id
-    features = data[:, :-1]
-    cloud_ids = data[:, -1].astype(np.int64)
+    total_rows = data.shape[0]
+    num_clouds = total_rows // particles_per_cloud
     
-    unique_ids = np.unique(cloud_ids)
+    if total_rows % particles_per_cloud != 0:
+        print(f"Warning: Total rows ({total_rows}) not divisible by particles_per_cloud ({particles_per_cloud}). "
+              f"Ignoring last {total_rows % particles_per_cloud} rows.")
+    
     features_list = []
     id_list = []
     
-    for cid in unique_ids:
-        mask = cloud_ids == cid
-        cloud_features = features[mask]
-        
-        if len(cloud_features) != particles_per_cloud:
-            print(f"Warning: Cloud {cid} has {len(cloud_features)} particles, expected {particles_per_cloud}. Skipping.")
-            continue
-        
+    for cid in range(num_clouds):
+        start_idx = cid * particles_per_cloud
+        end_idx = start_idx + particles_per_cloud
+        cloud_features = data[start_idx:end_idx]
         features_list.append(cloud_features)
         id_list.append(cid)
     
@@ -150,12 +123,7 @@ def create_cloud_objects(features_list: List[np.ndarray], labels: np.ndarray) ->
 
 
 def stratified_split_clouds(clouds: List[ParticleCloud], test_ratio: float):
-    """
-    Stratified split of clouds maintaining class balance.
     
-    Returns:
-        train_clouds, test_clouds
-    """
     labels = np.array([c.y.item() for c in clouds])
     
     class_0_idx = np.where(labels == 0)[0]
@@ -180,29 +148,18 @@ def stratified_split_clouds(clouds: List[ParticleCloud], test_ratio: float):
 
 
 def load_cloud_data(cfg, particles_per_cloud: int) -> Tuple[
-    List[ParticleCloud], List[ParticleCloud], List[ParticleCloud], int, Optional[StandardScaler]]:
-    """
-    Load signal and background CSV files and create particle cloud datasets.
-    
-    Args:
-        cfg: Config object with signal_path, background_path, train_size, test_size,
-             val_ratio, and normalize attributes
-        particles_per_cloud: number of particles per cloud
-        
-    Returns:
-        train_clouds, val_clouds, test_clouds, num_features, scaler
-    """
-    # Load CSVs
+    List[ParticleCloud], List[ParticleCloud], List[ParticleCloud], int, int, Optional[StandardScaler]]:
+  
+   
     _, sig_data = load_csv(cfg.signal_path)
     _, bkg_data = load_csv(cfg.background_path)
     
-    # Parse into clouds
     sig_features, sig_ids = parse_clouds_from_csv(sig_data, particles_per_cloud)
     bkg_features, bkg_ids = parse_clouds_from_csv(bkg_data, particles_per_cloud)
     
     print(f"Loaded {len(sig_features)} signal clouds, {len(bkg_features)} background clouds")
     
-    # Shuffle
+    
     sig_perm = np.random.permutation(len(sig_features))
     bkg_perm = np.random.permutation(len(bkg_features))
     sig_features = [sig_features[i] for i in sig_perm]
@@ -214,10 +171,9 @@ def load_cloud_data(cfg, particles_per_cloud: int) -> Tuple[
     bkg_train = bkg_features[:cfg.train_size]
     bkg_test = bkg_features[cfg.train_size:cfg.train_size + cfg.test_size]
     
-    # Combine features for normalization
     all_train_features = np.vstack([np.vstack(sig_train), np.vstack(bkg_train)])
     
-    # Normalize
+    
     scaler = None
     if cfg.normalize:
         scaler = StandardScaler()
@@ -229,7 +185,7 @@ def load_cloud_data(cfg, particles_per_cloud: int) -> Tuple[
         bkg_train = [scaler.transform(f).astype(np.float32) for f in bkg_train]
         bkg_test = [scaler.transform(f).astype(np.float32) for f in bkg_test]
     
-    # Create cloud objects
+  
     train_features = sig_train + bkg_train
     train_labels = np.array([1]*len(sig_train) + [0]*len(bkg_train), dtype=np.int64)
     
@@ -238,8 +194,7 @@ def load_cloud_data(cfg, particles_per_cloud: int) -> Tuple[
     
     all_train_clouds = create_cloud_objects(train_features, train_labels)
     test_clouds = create_cloud_objects(test_features, test_labels)
-    
-    # Split train into train/val
+
     train_clouds, val_clouds = stratified_split_clouds(all_train_clouds, cfg.val_ratio)
     
     num_features = train_features[0].shape[1]
@@ -247,7 +202,7 @@ def load_cloud_data(cfg, particles_per_cloud: int) -> Tuple[
     print(f"Train: {len(train_clouds)} | Val: {len(val_clouds)} | Test: {len(test_clouds)}")
     print(f"Particles per cloud: {particles_per_cloud} | Features per particle: {num_features}")
     
-    return train_clouds, val_clouds, test_clouds, num_features, scaler
+    return train_clouds, val_clouds, test_clouds, num_features, particles_per_cloud, scaler
 
 
 def create_cloud_dataloaders(
