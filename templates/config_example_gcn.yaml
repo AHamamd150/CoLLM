@@ -15,7 +15,7 @@ data:
   test_size: 2000            # samples per class for testing
   val_ratio: 0.15           # fraction of training data for validation
   normalize: true           # normalize features
-  nodes_per_graph: 5        # auto-detect from data if 0
+  nodes_per_graph: 5        # Number of particles per graph
 
 # ============================================================================
 # Model Architecture - GCN
