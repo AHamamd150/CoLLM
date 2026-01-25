@@ -1,13 +1,3 @@
-"""
-GNN Model Implementations
-
-Implements GNN layers and models using pure PyTorch (no PyG dependency).
-Supports: GCN, GAT, EdgeConv
-
-All models work with fully connected graphs with edge weights.
-Compatible with the GUI main.py interface.
-"""
-
 from typing import List, Optional
 import torch
 import torch.nn as nn
@@ -17,7 +7,6 @@ from .config_gnn import GNNModelConfig, GNNLayerConfig
 
 
 # ============================================================================
-# Activation Functions
 # ============================================================================
 
 ACTIVATIONS = {
@@ -42,10 +31,6 @@ def get_activation(name: str) -> nn.Module:
         raise ValueError(f"Unknown activation: {name}. Choose from: {list(ACTIVATIONS.keys())}")
     return ACTIVATIONS[name]()
 
-
-# ============================================================================
-# Graph Pooling Operations
-# ============================================================================
 
 def global_mean_pool(x: torch.Tensor, batch: torch.Tensor, num_graphs: int) -> torch.Tensor:
     """Global mean pooling over nodes."""
@@ -83,9 +68,6 @@ POOLING = {
 }
 
 
-# ============================================================================
-# GNN Layers
-# ============================================================================
 
 class GCNConv(nn.Module):
     """
@@ -109,20 +91,20 @@ class GCNConv(nn.Module):
         num_nodes = x.size(0)
         row, col = edge_index
         
-        # Compute degree for normalization
+
         deg = torch.zeros(num_nodes, device=x.device, dtype=x.dtype)
         deg.scatter_add_(0, row, edge_weight)
         
         deg_inv_sqrt = deg.pow(-0.5)
         deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
         
-        # Normalize edge weights
+
         norm = deg_inv_sqrt[row] * edge_weight * deg_inv_sqrt[col]
         
-        # Transform features
+
         x = self.linear(x)
         
-        # Message passing
+
         out = torch.zeros_like(x)
         out.scatter_add_(0, row.unsqueeze(1).expand_as(x[col]), x[col] * norm.unsqueeze(1))
         
@@ -235,13 +217,13 @@ class EdgeConv(nn.Module):
         x_j = x[col]
         edge_features = torch.cat([x_i, x_j - x_i], dim=-1)
         
-        # Apply MLP
+
         edge_features = self.mlp(edge_features)
         
         # Weight by edge weights
         edge_features = edge_features * edge_weight.unsqueeze(-1)
         
-        # Aggregate
+
         if self.aggr == 'max':
             out = torch.full((num_nodes, edge_features.size(1)), float('-inf'), 
                            device=x.device, dtype=x.dtype)
@@ -261,9 +243,6 @@ class EdgeConv(nn.Module):
         return out
 
 
-# ============================================================================
-# Flexible GNN Model
-# ============================================================================
 
 class FlexibleGNN(nn.Module):
     """
@@ -306,16 +285,14 @@ class FlexibleGNN(nn.Module):
             
             self.convs.append(conv)
             
-            # Batch normalization
             if layer_cfg.batchnorm:
                 self.bns.append(nn.BatchNorm1d(out_channels))
             else:
                 self.bns.append(nn.Identity())
             
-            # Activation
             self.activations.append(get_activation(layer_cfg.activation))
             
-            # Dropout
+     
             if layer_cfg.dropout > 0:
                 self.dropouts.append(nn.Dropout(layer_cfg.dropout))
             else:
@@ -323,7 +300,7 @@ class FlexibleGNN(nn.Module):
             
             in_channels = out_channels
         
-        # Output layer
+
         self.output_dim = in_channels
         self.classifier = nn.Sequential(
             nn.Linear(in_channels, in_channels // 2),
@@ -332,7 +309,7 @@ class FlexibleGNN(nn.Module):
             nn.Linear(in_channels // 2, cfg.output_units)
         )
         
-        # Output activation
+
         if cfg.output_activation:
             self.output_activation = get_activation(cfg.output_activation)
         else:
@@ -348,11 +325,11 @@ class FlexibleGNN(nn.Module):
             x = act(x)
             x = drop(x)
         
-        # Global pooling
+
         pool_fn = POOLING.get(self.pooling, global_mean_pool)
         x = pool_fn(x, batch, num_graphs)
         
-        # Classifier
+
         x = self.classifier(x)
         x = self.output_activation(x)
         
@@ -360,7 +337,6 @@ class FlexibleGNN(nn.Module):
 
 
 # ============================================================================
-# Model Builder
 # ============================================================================
 
 def build_gnn_model(num_features: int, cfg: GNNModelConfig) -> nn.Module:

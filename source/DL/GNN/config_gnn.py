@@ -10,7 +10,7 @@ class DataConfig:
     background_path: str
     train_size: int
     test_size: int
-    nodes_per_graph: int = 0      # Number of nodes per graph (inferred if 0)
+    nodes_per_graph: int = 0     
     val_ratio: float = 0.15
     normalize: bool = True
 

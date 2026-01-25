@@ -1,8 +1,3 @@
-"""
-GNN Training Module
-
-Training loop and evaluation functions for graph neural networks.
-"""
 
 from typing import Dict, Optional
 import numpy as np
@@ -14,9 +9,9 @@ from torch.cuda.amp import autocast, GradScaler
 from .data_gnn import Batch
 
 
-# ============================================================================
+# ==============
 # Metrics
-# ============================================================================
+# ================
 
 def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return np.mean(y_true == y_pred)
@@ -100,9 +95,9 @@ def get_metric_value(metrics: Dict[str, float], metric_name: str) -> float:
     raise ValueError(f"Unknown metric: {metric_name}")
 
 
-# ============================================================================
+
 # Optimizer and Scheduler
-# ============================================================================
+
 
 def get_optimizer(name: str, params, lr: float, weight_decay: float):
     name = name.lower()
@@ -140,9 +135,6 @@ def get_scheduler(cfg, optimizer, train_loader_len: int, epochs: int):
         raise ValueError(f"Unknown scheduler: {sched_type}")
 
 
-# ============================================================================
-# Device Selection
-# ============================================================================
 
 def get_device(device_config: str) -> torch.device:
     device_config = device_config.lower()
@@ -171,9 +163,9 @@ def get_device(device_config: str) -> torch.device:
     return device
 
 
-# ============================================================================
+
 # Training Loop
-# ============================================================================
+
 
 def train_epoch(
     model: nn.Module,
