@@ -271,17 +271,16 @@ Local inference supports:
 ./run.sh --run_GUI
 
 # Train MLP on signal/background data
-./run.sh --run_MLP --input config.yaml
+./run.sh --run_MLP --input templates/mlp_config.yaml
 
 # Train GNN classifier
-./run.sh --run_GNN --input templates/input_config_gnn_gat.yml
+./run.sh --run_GNN --input templates/config_example_gcn.yaml
+
+# Train Transformer classifier
+./run.sh --run_Transformer --input templates/config_transformer.yaml
 
 # Show help
 ./run.sh --help
 ```
 
----
 
-## License
-
-MIT License
