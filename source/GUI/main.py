@@ -1411,13 +1411,13 @@ with tab1:
         
         output_dir = st.text_input(
             "Output Directory (Please enter the full path)",
-            value="/Users/hammad/CoLLM-main/output",
+            value="full/path/to/output",
             help="Directory where generated analysis and plots will be saved"
         )
         
         input_file = st.text_input(
             "Input LHCO File (Please enter the full path)",
-            value="/Users/hammad/CoLLM-main/data/signal_1.lhco",
+            value="full/path/to/lhco",
             help="Path to the LHCO file for testing the generated analysis"
         )
         
