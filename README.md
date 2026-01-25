@@ -52,6 +52,7 @@ Dependencies are installed automatically on first run.
 | `--run_GUI` | Streamlit web interface | No |
 | `--run_MLP` | Train MLP classifier | Yes |
 | `--run_GNN` | Train GNN classifier | Yes |
+| `--run_Transformer` | Train Transformer classifier | Yes |
 
 | Option | Description |
 |--------|-------------|
@@ -173,7 +174,7 @@ train:
 Train Transformer classifier on particle cloud dataset.
 
 ```bash
-./run.sh --run_Transformer --input gnn_config.yaml
+./run.sh --run_Transformer --input transformer_config.yaml
 ```
 
 ### Transformer Configuration Example
