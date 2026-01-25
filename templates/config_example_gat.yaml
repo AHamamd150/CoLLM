@@ -15,7 +15,7 @@ data:
   test_size: 2000
   val_ratio: 0.15
   normalize: true
-  nodes_per_graph: 5        # auto-detect
+  nodes_per_graph: 5        # Number of particles per graph
 
 # ============================================================================
 # Model Architecture - GAT
