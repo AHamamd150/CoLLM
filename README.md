@@ -134,8 +134,6 @@ Train a Multi-Layer Perceptron classifier on tabular data.
 ./run.sh --run_MLP --input config.yaml
 ```
 
-Executes: `python -m source.DL.MLP.main_mlp --config <config_file>`
-
 ---
 
 ## Mode 4: GNN Training
@@ -145,8 +143,6 @@ Train Graph Neural Network classifiers (GCN, GAT, EdgeConv).
 ```bash
 ./run.sh --run_GNN --input gnn_config.yaml
 ```
-
-Executes: `python -m source.DL.main_gnn --config <config_file>`
 
 ### GNN Configuration Example
 
@@ -164,6 +160,35 @@ model:
       activation: relu
   pooling: mean                # mean, max, add
   output_units: 2
+
+train:
+  epochs: 100
+  batch_size: 32
+  learning_rate: 0.001
+  device: auto                 # auto, cpu, cuda
+```
+
+## Mode 5: Transformer Training
+
+Train Transformer classifier on particle cloud dataset.
+
+```bash
+./run.sh --run_Transformer --input gnn_config.yaml
+```
+
+### Transformer Configuration Example
+
+```yaml
+model:
+  embed_dim: 128                # embedding dimension
+  num_heads: 8                 # number of attention heads
+  num_layers: 4                # number of transformer layers
+  ffn_dim: 256                  # feed-forward network dimension
+  dropout: 0.1                 # dropout rate
+  attention_dropout: 0.1       # attention dropout rate
+  pooling: mean                  # pooling method: mean, max, attention
+  num_classes: 2                # number of output classes
+  pre_norm: true               # use pre-normalization
 
 train:
   epochs: 100
