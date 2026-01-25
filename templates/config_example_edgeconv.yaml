@@ -27,7 +27,7 @@ model:
   layers:
     - out_channels: 64
       activation: relu
-      k: 7                    # k nearest neighbors (not used for fully connected)
+      k: 7                    # k nearest neighbors 
       aggr: max               # aggregation: max, mean, add
       batchnorm: true
       dropout: 0.1
