@@ -1,0 +1,63 @@
+# ============================================================================
+# Transformer Classifier Configuration
+# ============================================================================
+
+seed: 42
+output_dir: "output"
+
+# ============================================================================
+# Data Configuration
+# ============================================================================
+data:
+  signal_path: "data/signal_GNN.csv"
+  background_path: "data/bkg_gnn.csv"
+  train_size: 1000          # samples per class for training
+  test_size: 1000            # samples per class for testing
+  val_ratio: 0.15             # fraction of training data for validation
+  normalize: true             # normalize features
+  particles_per_cloud: 8      # number of particles per cloud
+
+# ============================================================================
+# Model Architecture - Transformer
+# ============================================================================
+# Pooling: mean, max, attention
+model:
+  embed_dim: 128                # embedding dimension
+  num_heads: 8                 # number of attention heads
+  num_layers: 4                # number of transformer layers
+  ffn_dim: 256                  # feed-forward network dimension
+  dropout: 0.1                 # dropout rate
+  attention_dropout: 0.1       # attention dropout rate
+  pooling: mean                  # pooling method: mean, max, attention
+  num_classes: 2                # number of output classes
+  pre_norm: true               # use pre-normalization
+
+# ============================================================================
+# Training Configuration
+# ============================================================================
+train:
+  epochs: 50
+  batch_size: 64
+  learning_rate: 0.0001
+  weight_decay: 0.01          # L2 regularization
+  optimizer: adamw               # adam, adamw, sgd
+  device: auto                  # auto, cpu, cuda, cuda:0, cuda:1
+
+  # Early Stopping
+  early_stopping: true
+  early_stopping_patience: 10   # stop if no improvement for N epochs
+  early_stopping_metric: val_loss  # val_loss or eval_metric
+
+  # Training Precision
+  precision: float32            # float32, float16, mixed
+
+  # Gradient Clipping
+  gradient_clip: 1.0             # gradient clipping value
+
+  # Learning Rate Scheduler
+  scheduler:
+    type: cosine               # none, step, plateau, cosine, cosine_warmup, onecycle
+    # Cosine annealing uses epochs as T_max
+
+  # Evaluation Metric (for model selection and reporting)
+  eval_metric: auc              # accuracy, auc, f1, recall, precision
