@@ -42,6 +42,10 @@ conda create -n collm python=3.11
 
 # Activate the environment
 conda activate collm
+
+# Activate the run file
+cd CoLLM-main
+chmod 777 run.sh
 ```
 
 #### Step 3: Install Dependencies
