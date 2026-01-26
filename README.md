@@ -27,14 +27,14 @@ CoLLM automates collider physics analysis by using Large Language Models to gene
 ---
 ##  Installation
 
-### Step 1: Clone the Repository
+#### Step 1: Clone the Repository
 
 ```bash
 git clone  https://github.com/AHamamd150/CoLLM.git
 cd CoLLM
 ```
 
-### Step 2: Create a Conda Environment
+#### Step 2: Create a Conda Environment
 
 ```bash
 # Create a new conda environment with Python 3.11
@@ -44,7 +44,7 @@ conda create -n collm python=3.11
 conda activate collm
 ```
 
-### Step 3: Install Dependencies
+#### Step 3: Install Dependencies
 
 CoLLM automatically check and installs required dependencies on first run via the pip command. You don't have to install any package by yourself. 
 
