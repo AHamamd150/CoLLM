@@ -121,7 +121,8 @@ Api_key: "your_huggingface_api_key"
 - Normalize all histograms to unity
 
 [OUTPUT_STRUCTURE]
-- Print cutflow with event counts after each selection
+- Save the histograms in png format
+- Print cutflow with event counts
 ```
 
 ---
