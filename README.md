@@ -241,31 +241,14 @@ CoLLM/
 
 ---
 
-## LHCO Data Format
 
-```
-#  typ   eta    phi     pt   jmas  ntrk  btag  had/em
-0           0      0                              # Event header
-1    2  -2.26   0.36  54.70  0.11  -1.0   6.0  57.13  # Muon
-2    4  -1.34   3.02  85.41 14.89  11.0   0.0   2.51  # Jet
-```
-
-| Type | Object |
-|------|--------|
-| 1 | Electron |
-| 2 | Muon |
-| 3 | Tau |
-| 4 | Jet |
-| 6 | Missing ET |
-
----
 
 ## Supported LLM Models
 
 | Model | Notes |
 |-------|-------|
-| `Qwen/Qwen2.5-Coder-14B-Instruct` | Recommended |
-| `meta-llama/Llama-3.3-70B-Instruct` | API only |
+| `Qwen/Qwen2.5-Coder-14B-Instruct` | Local/API  |
+| `meta-llama/Llama-3.3-70B-Instruct` | API only (Recommended) |
 | `codellama/CodeLlama-34b-Instruct-hf` | Local/API |
 
 Local inference supports:
