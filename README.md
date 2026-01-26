@@ -54,7 +54,7 @@ CoLLM automatically check and installs required dependencies on first run via th
 
 ## Usage
 
-### Command Line Options
+#### Command Line Options
 
 ```bash
 ./run.sh [MODE] [OPTIONS]
@@ -75,7 +75,7 @@ CoLLM automatically check and installs required dependencies on first run via th
 
 ---
 
-## Mode 1: TUI (Terminal User Interface)
+### Mode 1: TUI (Terminal User Interface)
 
 Generate analysis code from natural language via command line.
 
@@ -83,7 +83,7 @@ Generate analysis code from natural language via command line.
 ./run.sh --run_TUI --input user_input_TUI.yml
 ```
 
-### TUI Configuration (`user_input_TUI.yml`)
+#### TUI Configuration (`user_input_TUI.yml`)
 
 ```yaml
 Output_dir: "./output/"
@@ -105,7 +105,7 @@ Api_key: "your_huggingface_api_key"
 | `Use_api` | `True` for HF Inference API, `False` for local |
 | `Api_key` | HuggingFace API token (required if `Use_api: True`) |
 
-### User Input Format (`user_input.txt`)
+#### User Input Format (`user_input.txt`)
 
 ```
 [SELECTION_CUTS]
@@ -126,7 +126,7 @@ Api_key: "your_huggingface_api_key"
 
 ---
 
-## Mode 2: GUI (Graphical User Interface)
+### Mode 2: GUI (Graphical User Interface)
 
 Launch the Streamlit web interface for interactive configuration.
 
@@ -141,7 +141,7 @@ Opens browser at `http://localhost:8501` with:
 
 ---
 
-## Mode 3: MLP Training
+### Mode 3: MLP Training
 
 Train a Multi-Layer Perceptron classifier on tabular data.
 
@@ -151,7 +151,7 @@ Train a Multi-Layer Perceptron classifier on tabular data.
 
 ---
 
-## Mode 4: GNN Training
+### Mode 4: GNN Training
 
 Train Graph Neural Network classifiers (GCN, GAT, EdgeConv).
 
@@ -159,7 +159,7 @@ Train Graph Neural Network classifiers (GCN, GAT, EdgeConv).
 ./run.sh --run_GNN --input gnn_config.yaml
 ```
 
-### GNN Configuration Example
+#### GNN Configuration Example
 
 ```yaml
 model:
@@ -183,7 +183,7 @@ train:
   device: auto                 # auto, cpu, cuda
 ```
 
-## Mode 5: Transformer Training
+### Mode 5: Transformer Training
 
 Train Transformer classifier on particle cloud dataset.
 
@@ -191,7 +191,7 @@ Train Transformer classifier on particle cloud dataset.
 ./run.sh --run_Transformer --input transformer_config.yaml
 ```
 
-### Transformer Configuration Example
+#### Transformer Configuration Example
 
 ```yaml
 model:
