@@ -1977,7 +1977,7 @@ with tab2:
             early_stopping = st.checkbox("Early Stopping", value=True)
             if early_stopping:
                 patience = st.number_input(
-                    "⏱️ Patience",
+                    "Patience",
                     min_value=1,
                     max_value=50,
                     value=3,
@@ -2180,7 +2180,7 @@ with tab2:
             gnn_num_layers = st.number_input(
                 "Number of GNN layers",
                 min_value=1,
-                max_value=20,
+                max_value=50,
                 value=3,
                 step=1,
                 key="gnn_num_layers",
@@ -2252,7 +2252,7 @@ with tab2:
                             "K Neighbors",
                             min_value=3,
                             max_value=50,
-                            value=7,
+                            value=5,
                             step=1,
                             key=f"gnn_{i}_k",
                             help="Number of nearest neighbors for edge construction"
@@ -2407,7 +2407,7 @@ with tab2:
             gnn_test_size = st.number_input(
                 "Test Size (per class)",
                 min_value=1000,
-                max_value=500000,
+                max_value=1000000,
                 value=1000,
                 step=10,
                 key="gnn_test_size",
@@ -2518,7 +2518,7 @@ with tab2:
         
         with col_add1:
             gnn_eval_metric = st.selectbox(
-                "📊 Evaluation Metric",
+                "Evaluation Metric",
                 options=["accuracy", "auc", "f1", "recall", "precision"],
                 index=1,
                 key="gnn_eval_metric"
@@ -2561,7 +2561,7 @@ with tab2:
                 "Number of particles per graph",
                 min_value=1,
                 max_value=100,
-                value=4,
+                value=9,
                 key="nodes_per_graph",
                 help="Number of particles in the graph"
             )
@@ -2880,7 +2880,7 @@ with tab2:
             tr_test_size = st.number_input(
                 "Test Size (per class)",
                 min_value=1000,
-                max_value=500000,
+                max_value=1000000,
                 value=1000,
                 step=10,
                 key="tr_test_size",
@@ -3045,10 +3045,10 @@ with tab2:
         
         with col_cloud1:
             particles_per_cloud = st.number_input(
-                "Number of particles per cloud",
+                "Number of particles per cloud (per event)",
                 min_value=1,
                 max_value=100,
-                value=4,
+                value=9,
                 key="particles_per_cloud",
                 help="Number of particles in each cloud"
             )
