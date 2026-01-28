@@ -2,10 +2,10 @@
 # Generic setup. To be adjusted by the user
 #=================================
 
-Output_dir : "/Users/hammad/CoLLM-main/output/"
+Output_dir : "full/path/to/CoLLM-main/output/"
 DEFAULT_MODEL : "meta-llama/Llama-3.3-70B-Instruct"
 MAX_RETRIES : 3
-Input_file : "/Users/hammad/CoLLM-main/data/signal_1.lhco"
-User_input : "/Users/hammad/CoLLM-main/templates/user_input_2.txt" # user input to generate the analysis code
-Use_api : True
-Api_key: "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"
+Input_file : "full/path/to/data/signal_1.lhco"
+User_input : "full/pth/to/templates/user_input_2.txt" # user input to generate the analysis code
+Use_api : False
+Api_key: "hf_XXXXXXXXXXXXXX"
