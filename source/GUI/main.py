@@ -1377,7 +1377,7 @@ with tab1:
     # LLM Code Generation Section
     st.markdown("""
     <div class="section-header">
-        <div class="section-icon">🤖</div>
+        <div class="section-icon"></div>
         <div>
             <h3 class="section-title">LLM  Analysis Generation</h3>
             <p class="section-desc">Describe your analysis in natural language</p>
@@ -1452,20 +1452,20 @@ with tab1:
         st.markdown("""
         <div class="custom-card">
             <div class="card-header">
-                <span style="font-size: 1.2rem;">📂</span>
+                <span style="font-size: 1.2rem;"></span>
                 <h4 class="card-title">Paths Configuration</h4>
             </div>
         """, unsafe_allow_html=True)
         
         output_dir = st.text_input(
             "Output Directory (Please enter the full path)",
-            value="/Users/hammad/CoLLM-main/output",
+            value="full/path/to/output",
             help="Directory where generated analysis and plots will be saved"
         )
         
         input_file = st.text_input(
             "Input LHCO File (Please enter the full path)",
-            value="/Users/hammad/CoLLM-main/data/signal_1.lhco",
+            value="full/path/to/data/signal_1.lhco",
             help="Path to the LHCO file for testing the generated analysis"
         )
         
@@ -1481,7 +1481,7 @@ with tab1:
         st.markdown("""
         <div class="custom-card">
             <div class="card-header">
-                <span style="font-size: 1.2rem;">🤖</span>
+                <span style="font-size: 1.2rem;"></span>
                 <h4 class="card-title">Model Settings</h4>
             </div>
         """, unsafe_allow_html=True)
@@ -1504,7 +1504,7 @@ with tab1:
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
          "Qwen/QwQ-32B",         
             ],
-            index=4,
+            index=1,
             help="Select the Hugging Face model for code generation"
         )
         
@@ -1524,7 +1524,7 @@ with tab1:
         
         api_key = st.text_input(
             "API Key",
-            value="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",
+            value="Enter your API key",
             type="password",
             help="Your Hugging Face API key (required if using API)",
             disabled=not use_api
@@ -1537,7 +1537,7 @@ with tab1:
     col_run1, col_run2, col_run3 = st.columns([1, 1, 2])
     
     with col_run1:
-        run_analysis = st.button("🚀 Run Preselection Analysis", use_container_width=True)
+        run_analysis = st.button("Run Preselection Analysis", use_container_width=True)
     
     #with col_run2:
      #   save_config = st.button("💾 Save Configuration", use_container_width=True)
