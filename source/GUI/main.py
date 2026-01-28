@@ -1237,6 +1237,9 @@ st.markdown("""
         An integrated framework combining LLM-powered selection analysis code generation 
         with advanced deep learning classifiers for high energy physics research.
     </p>
+    <p class="hero-subtitle">
+⚠️   For better visualization change your broswer to the dark mode.
+ </p>
         <p class="hero-subtitle">
 ⚠️   For LLM code generation on your laptop, we strongly recommend using the Hugging Face API.
 This enables inference via Hugging Face Claude. 
