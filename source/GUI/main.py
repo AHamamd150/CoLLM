@@ -1238,7 +1238,7 @@ st.markdown("""
         with advanced deep learning classifiers for high energy physics research.
     </p>
     <p class="hero-subtitle">
-⚠️   For better visualization change your broswer to the dark mode.
+⚠️   For optimal visualization, switch your browser to dark mode.
  </p>
         <p class="hero-subtitle">
 ⚠️   For LLM code generation on your laptop, we strongly recommend using the Hugging Face API.
