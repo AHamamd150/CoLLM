@@ -45,7 +45,7 @@ conda activate collm
 
 # Activate the run file
 cd CoLLM-main
-chmod 777 run.sh
+chmod +x run.sh
 ```
 
 #### Step 3: Install Dependencies
