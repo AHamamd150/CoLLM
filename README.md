@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-*LLM-powered analysis code generation for LHCO data with integrated deep learning pipelines*
+*LLM  analysis code generation for LHCO data with integrated deep learning pipelines*
 
 </div>
 
@@ -151,7 +151,7 @@ Opens browser at `http://localhost:8501` with:
 Train a Multi-Layer Perceptron classifier on tabular data.
 
 ```bash
-./run.sh --run_MLP --input config.yaml
+./run.sh --run_MLP --input templates/config.yaml
 ```
 
 ---
@@ -161,7 +161,7 @@ Train a Multi-Layer Perceptron classifier on tabular data.
 Train Graph Neural Network classifiers (GCN, GAT, EdgeConv).
 
 ```bash
-./run.sh --run_GNN --input gnn_config.yaml
+./run.sh --run_GNN --input templates/gnn_config.yaml
 ```
 
 #### GNN Configuration Example
@@ -193,7 +193,7 @@ train:
 Train Transformer classifier on particle cloud dataset.
 
 ```bash
-./run.sh --run_Transformer --input transformer_config.yaml
+./run.sh --run_Transformer --input templates/transformer_config.yaml
 ```
 
 #### Transformer Configuration Example
@@ -267,7 +267,7 @@ Local inference supports:
 
 ```bash
 # Generate analysis code via TUI
-./run.sh --run_TUI --input user_input_TUI.yml
+./run.sh --run_TUI --input templates/user_input_TUI.yml
 
 # Launch web interface
 ./run.sh --run_GUI
