@@ -1490,7 +1490,7 @@ with tab1:
         """, unsafe_allow_html=True)
         
         default_model = st.selectbox(
-            "LLM Model",
+            "LLM Model (meta-llama/Llama-3.3-70B-Instruct is recommended; however, it requires API access.)",
             options=[
           "Qwen/Qwen2.5-Coder-7B-Instruct",      # Best balance of speed/quality
           "Qwen/Qwen2.5-Coder-32B-Instruct",     # Higher quality
