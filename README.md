@@ -84,7 +84,7 @@ CoLLM automatically check and installs required dependencies on first run via th
 Generate analysis code from natural language via command line.
 
 ```bash
-./run.sh --run_TUI --input user_input_TUI.yml
+./run.sh --run_TUI --input templates/user_input_TUI.yml
 ```
 
 #### TUI Configuration (`user_input_TUI.yml`)
