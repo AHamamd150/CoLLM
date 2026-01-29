@@ -91,7 +91,7 @@ Generate analysis code from natural language via command line.
 
 ```yaml
 Output_dir: "./output/"
-DEFAULT_MODEL: "Qwen/Qwen2.5-Coder-14B-Instruct"
+DEFAULT_MODEL: "Qwen/Qwen2.5-Coder-14B-Instruct" #meta-llama/Llama-3.3-70B-Instruct LLM is recommended but it needs an API
 MAX_RETRIES: 3
 Input_file: "./data/signal.lhco"
 User_input: "./templates/user_input.txt"
