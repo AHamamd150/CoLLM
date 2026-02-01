@@ -2,7 +2,7 @@
 
 # CoLLM
 
-### Collider LLM — End-to-End Deep Learning Toolbox for HEP Analysis
+### Collider LLM — End-to-End Deep Learning Toolbox for Collider Analysis
 
 <img src="logo/logo.png" alt="CoLLM Logo" width="150"/>
 
