@@ -250,11 +250,11 @@ CoLLM/
 
 ## Supported LLM Models
 
-| Model | Notes |
-|-------|-------|
-| `Qwen/Qwen2.5-Coder-14B-Instruct` | Local/API  |
-| `meta-llama/Llama-3.3-70B-Instruct` | API only (Recommended) |
-| `codellama/CodeLlama-34b-Instruct-hf` | Local/API |
+| Model | Params | Category | Focus | Key features | Memory [GB] | 
+|-------|-------|-----------|-------|--------------|--------------|
+|`Qwen2.5-Coder-3B`| 3B  | Coder | Code gen. | High speed, low footprint | 6--8 |
+|`Llama-3.2-3B`    | 3B  | General | General | Lightweight, stable       | 6--8 | 
+|`Qwen2.5-Coder-7B`| 7B  | Coder | Code gen. | Balanced performance      | 14--16 |
 
 Local inference supports:
 - 4-bit quantization (CUDA with bitsandbytes)
