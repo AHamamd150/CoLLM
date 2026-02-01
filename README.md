@@ -252,9 +252,14 @@ CoLLM/
 
 | Model | Params | Category | Focus | Key features | Memory [GB] | 
 |-------|-------|-----------|-------|--------------|--------------|
-|`Qwen2.5-Coder-3B`| 3B  | Coder | Code gen. | High speed, low footprint | 6--8 |
-|`Llama-3.2-3B`    | 3B  | General | General | Lightweight, stable       | 6--8 | 
-|`Qwen2.5-Coder-7B`| 7B  | Coder | Code gen. | Balanced performance      | 14--16 |
+|`Qwen2.5-Coder-3B`| 3B  | Coder | Code gen. | High speed, low footprint | 6-8 |
+|`Llama-3.2-3B`    | 3B  | General | General | Lightweight, stable       | 6-8 | 
+|`Qwen2.5-Coder-7B`| 7B  | Coder | Code gen. | Balanced performance      | 14-16 |
+|`Qwen2.5-Coder-32B`|32B | Coder | Code gen. | High precision            | 60-70 |
+|`Qwen3-Coder-30B`|30B | Coder | Code gen. | Scalable performance        |55-65 |
+|`Llama-3.3-70B`|70B | General | General | Long range coherence        |130-150 |
+|`Qwen2.5-72B`|72B | General | Analysis  | Strong analytical capability | 135-155 |
+|`DeepSeek-R1-32B`|32B | Reasoning | Analysis  | Multi-step inference   | 60-70  |
 
 Local inference supports:
 - 4-bit quantization (CUDA with bitsandbytes)
