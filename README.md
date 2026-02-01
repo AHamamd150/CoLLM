@@ -21,7 +21,7 @@
 CoLLM automates collider physics analysis by using Large Language Models to generate executable Python scripts from natural language descriptions.
 
 <p align="center">
-  <img src="logo/workflow.jpg" alt="Workflow" width="900"/>
+  <img src="logo/workflowv2.png" alt="Workflow" width="900"/>
 </p>
 
 ---
