@@ -9,9 +9,9 @@ from torch.cuda.amp import autocast, GradScaler
 from .data_gnn import Batch
 
 
-# ==============
-# Metrics
-# ================
+# ======================================
+# Metrics - handcrafted to avoid loading extra modules
+# ======================================
 
 def accuracy_score(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     return np.mean(y_true == y_pred)
@@ -95,8 +95,6 @@ def get_metric_value(metrics: Dict[str, float], metric_name: str) -> float:
     raise ValueError(f"Unknown metric: {metric_name}")
 
 
-
-# Optimizer and Scheduler
 
 
 def get_optimizer(name: str, params, lr: float, weight_decay: float):
