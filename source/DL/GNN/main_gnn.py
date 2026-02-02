@@ -36,9 +36,9 @@ def main():
     args = parser.parse_args()
     
     # Load config
-    print("=" * 70)
-    print("GNN GRAPH CLASSIFIER")
-    print("=" * 70)
+    print("=" * 40)
+    print("GNN graph classifier")
+    print("=" * 40)
     print(f"Config: {args.config}")
     cfg = load_gnn_config(args.config)
     
@@ -50,9 +50,9 @@ def main():
     device = get_device(cfg.train.device)
     
     # Load data
-    print("\n" + "=" * 70)
-    print("DATA")
-    print("=" * 70)
+    print("\n" + "=" * 40)
+    print("Data")
+    print("=" * 40)
     train_graphs, val_graphs, test_graphs, num_features, nodes_per_graph, scaler = load_graph_data(cfg.data)
     
     train_loader, val_loader, test_loader = create_graph_dataloaders(
@@ -62,22 +62,22 @@ def main():
     )
     
     # Build model
-    print("\n" + "=" * 70)
-    print("MODEL")
-    print("=" * 70)
+    print("\n" + "=" * 40)
+    print("Model")
+    print("=" * 40)
     
     model = build_gnn_model(num_features, cfg.model).to(device)
     
     # Train
-    print("\n" + "=" * 70)
-    print("TRAINING")
-    print("=" * 70)
+    print("\n" + "=" * 40)
+    print("Training")
+    print("=" * 40)
     history = train(model, train_loader, val_loader, cfg.train, device)
     
     # Test
-    print("\n" + "=" * 70)
-    print("TEST RESULTS")
-    print("=" * 70)
+    print("\n" + "=" * 40)
+    print("Test result")
+    print("=" * 40)
     test_metrics = evaluate(model, test_loader, torch.nn.CrossEntropyLoss(), device)
     
     print(f"  Loss:      {test_metrics['loss']:.4f}")
@@ -87,7 +87,7 @@ def main():
     print(f"  Recall:    {test_metrics['recall']:.4f}")
     print(f"  F1:        {test_metrics['f1']:.4f}")
     
-    # Save results
+    
     os.makedirs(cfg.output_dir, exist_ok=True)
     
     # Save model
