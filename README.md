@@ -16,6 +16,16 @@
 
 ---
 
+## Table of Contents
+- [Overview](#overview)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [Supported LLM Models](#supported-llm-models)
+- [Examples](#examples)
+
+---
+
 ## Overview
 
 CoLLM automates collider physics analysis by using Large Language Models to generate executable Python scripts from natural language descriptions.
