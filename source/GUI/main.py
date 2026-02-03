@@ -1507,7 +1507,7 @@ with tab1:
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
          "Qwen/QwQ-32B",         
             ],
-            index=1,
+            index=4,
             help="Select the Hugging Face model for code generation"
         )
         
