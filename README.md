@@ -224,11 +224,14 @@ train:
 ```
 CoLLM/
 ├── run.sh                     # Main entry point
-├── user_input_TUI.yml         # TUI configuration
-├── config.yaml                # MLP configuration
-├── data/                      # Sample LHCO files
-├── output/                    # Generated outputs
-├── templates/                 # User input examples
+├── data/                      # Sample LHCO and CSV data files
+├── examples_user_input/       # User input examples (user_input_1-5.txt)
+├── logo/                      # Project logo and workflow images
+├── templates/                 # Configuration templates
+│   ├── user_input_TUI.yml     # TUI configuration
+│   ├── mlp_config.yaml        # MLP configuration
+│   ├── config_transformer.yaml # Transformer configuration
+│   └── config_example_*.yaml  # GNN configurations (GCN/GAT/EdgeConv)
 └── source/
     ├── LLM/
     │   ├── collm_lhco.py      # LLM orchestrator
@@ -289,5 +292,3 @@ Local inference supports:
 # Show help
 ./run.sh --help
 ```
-
-
