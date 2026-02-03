@@ -68,7 +68,7 @@ def ensure_packages():
         "langchain":             "langchain",
         "langchain_huggingface": "langchain-huggingface",
         "transformers":          "transformers",
-        "huggingface_hub":       "huggingface-hub",
+        "huggingface_hub":       "huggingface-hub<1.0.0",
         "accelerate":            "accelerate",
         "pydantic":              "pydantic",
         
