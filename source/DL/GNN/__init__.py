@@ -1,11 +1,3 @@
-"""
-GNN Training Package
-
-Graph Neural Network training framework for graph classification.
-Supports: GCN, GAT, EdgeConv
-
-Compatible with the GUI main.py interface.
-"""
 
 from .config_gnn import (
     load_gnn_config, 

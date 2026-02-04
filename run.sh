@@ -6,7 +6,7 @@ RUN_TUI=false
 RUN_GUI=false
 RUN_MLP=false
 RUN_GNN=false
-
+RUN_Transformer=false
 
 usage() {
     echo "Usage:"
@@ -87,7 +87,8 @@ done
 # Run GUI mode
 if [ "$RUN_GUI" = true ]; then
     echo "Checking requirements..."
-    python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    #python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    python source/utils/run_checker.py
     if [ $? -ne 0 ]; then
         echo "Error: Requirements check failed"
         exit 1
@@ -101,7 +102,8 @@ fi
 # Run TUI mode
 if [ "$RUN_TUI" = true ]; then
     echo "Checking requirements..."
-    python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    #python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    python source/utils/run_checker.py
     if [ -z "$INPUT_FILE" ]; then
         echo "Error: --input is required when using --run_TUI"
         usage
@@ -119,7 +121,8 @@ fi
 # Run MLP mode
 if [ "$RUN_MLP" = true ]; then
     echo "Checking requirements..."
-    python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    #python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    python source/utils/run_checker.py
     if [ -z "$INPUT_FILE" ]; then
         echo "Error: --input is required when using --run_MLP"
         usage
@@ -138,7 +141,8 @@ fi
 # Run GNN mode
 if [ "$RUN_GNN" = true ]; then
     echo "Checking requirements..."
-    python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    #python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    python source/utils/run_checker.py
     if [ -z "$INPUT_FILE" ]; then
         echo "Error: --input is required when using --run_GNN"
         usage
@@ -157,7 +161,8 @@ fi
 # Run Transformer mode
 if [ "$RUN_Transformer" = true ]; then
     echo "Checking requirements..."
-    python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    #python -c "from source.utils.requirements_check import ensure_packages; ensure_packages()"
+    python source/utils/run_checker.py
     if [ -z "$INPUT_FILE" ]; then
         echo "Error: --input is required when using --run_Transformer"
         usage

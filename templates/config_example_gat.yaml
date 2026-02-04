@@ -3,19 +3,19 @@
 # ============================================================================
 
 seed: 42
-output_dir: "output_gnn_gat"
+output_dir: "output"
 
 # ============================================================================
 # Data Configuration
 # ============================================================================
 data:
-  signal_path: "data/signal_gnn.csv"
+  signal_path: "data/signal_GNN.csv"
   background_path: "data/bkg_gnn.csv"
-  train_size: 10000
-  test_size: 2000
+  train_size: 1000
+  test_size: 1000
   val_ratio: 0.15
   normalize: true
-  nodes_per_graph: 5        # auto-detect
+  nodes_per_graph: 8        # Number of particles per graph
 
 # ============================================================================
 # Model Architecture - GAT

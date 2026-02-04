@@ -798,6 +798,54 @@ st.markdown("""
         border-radius: 10px !important;
     }
     
+    /* Selectbox text color */
+    .stSelectbox > div > div > div {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Dropdown menu/listbox container */
+    .stSelectbox [data-baseweb="popover"],
+    [data-baseweb="popover"] > div,
+    [data-baseweb="menu"],
+    [role="listbox"] {
+        background: var(--bg-secondary) !important;
+        background-color: var(--bg-secondary) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+    }
+    
+    /* Individual dropdown options */
+    [data-baseweb="menu"] li,
+    [role="listbox"] li,
+    [role="option"],
+    [data-baseweb="menu"] [role="option"],
+    .stSelectbox ul li {
+        background: var(--bg-secondary) !important;
+        background-color: var(--bg-secondary) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    /* Dropdown option hover state */
+    [data-baseweb="menu"] li:hover,
+    [role="listbox"] li:hover,
+    [role="option"]:hover,
+    [data-baseweb="menu"] [role="option"]:hover,
+    .stSelectbox ul li:hover {
+        background: var(--bg-hover) !important;
+        background-color: var(--bg-hover) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    /* Selected/highlighted option */
+    [data-baseweb="menu"] li[aria-selected="true"],
+    [role="option"][aria-selected="true"],
+    [data-baseweb="menu"] li[data-highlighted="true"],
+    [role="option"][data-highlighted="true"] {
+        background: var(--accent-primary) !important;
+        background-color: var(--accent-primary) !important;
+        color: white !important;
+    }
+    
     /* ═══════════════════ BUTTON STYLING ═══════════════════ */
     .stButton > button {
         background: var(--gradient-1) !important;
@@ -1189,6 +1237,9 @@ st.markdown("""
         An integrated framework combining LLM-powered selection analysis code generation 
         with advanced deep learning classifiers for high energy physics research.
     </p>
+    <p class="hero-subtitle">
+⚠️   For optimal visualization, switch your browser to dark mode.
+ </p>
         <p class="hero-subtitle">
 ⚠️   For LLM code generation on your laptop, we strongly recommend using the Hugging Face API.
 This enables inference via Hugging Face Claude. 
@@ -1204,7 +1255,7 @@ start_training = False
 gnn_start_training = False
 tr_start_training = False
 #===================================================
-#     Selection analysis configuration
+#                          Selection analysis configuration
 #===================================================
 
  #   st.markdown("""
@@ -1326,10 +1377,10 @@ tr_start_training = False
  #               elif path_:
  #                   st.success(f" Background files verified: `{path_}`")
 with tab1:    
-
+    # LLM Code Generation Section
     st.markdown("""
     <div class="section-header">
-        <div class=""></div>
+        <div class="section-icon"></div>
         <div>
             <h3 class="section-title">LLM  Analysis Generation</h3>
             <p class="section-desc">Describe your analysis in natural language</p>
@@ -1387,10 +1438,10 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
     
-
+    # LLM Configuration Section
     st.markdown("""
     <div class="section-header">
-        <div class=""></div>
+        <div class="section-icon">⚙️</div>
         <div>
             <h3 class="section-title">LLM Configuration</h3>
             <p class="section-desc">Configure the language model and execution settings</p>
@@ -1411,13 +1462,13 @@ with tab1:
         
         output_dir = st.text_input(
             "Output Directory (Please enter the full path)",
-            value="/Users/hammad/CoLLM-main/output",
+            value="full/path/to/output",
             help="Directory where generated analysis and plots will be saved"
         )
         
         input_file = st.text_input(
             "Input LHCO File (Please enter the full path)",
-            value="/Users/hammad/CoLLM-main/data/signal_1.lhco",
+            value="full/path/to/data/signal_1.lhco",
             help="Path to the LHCO file for testing the generated analysis"
         )
         
@@ -1439,7 +1490,7 @@ with tab1:
         """, unsafe_allow_html=True)
         
         default_model = st.selectbox(
-            "LLM Model (recommend: meta-llama/Llama-3.3-70B-Instruct)",
+            "LLM Model (meta-llama/Llama-3.3-70B-Instruct is recommended; however, it requires API access.)",
             options=[
           "Qwen/Qwen2.5-Coder-7B-Instruct",      # Best balance of speed/quality
           "Qwen/Qwen2.5-Coder-32B-Instruct",     # Higher quality
@@ -1456,7 +1507,7 @@ with tab1:
         "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
          "Qwen/QwQ-32B",         
             ],
-            index=0,
+            index=4,
             help="Select the Hugging Face model for code generation"
         )
         
@@ -1476,7 +1527,7 @@ with tab1:
         
         api_key = st.text_input(
             "API Key",
-            value="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",
+            value="",
             type="password",
             help="Your Hugging Face API key (required if using API)",
             disabled=not use_api
@@ -1611,7 +1662,7 @@ python generated_lhco_analysis.py   full/path/to/file.lhco
                     status_placeholder.error("Analysis failed")
                     
             except Exception as e:
-                status_placeholder.error(f"Error occurred: {e}")
+                status_placeholder.error(f"❌ Error occurred: {e}")
                 st.error(f"Error running analysis: {e}")
                 import traceback
                 st.code(traceback.format_exc(), language="bash")
@@ -1929,7 +1980,7 @@ with tab2:
             early_stopping = st.checkbox("Early Stopping", value=True)
             if early_stopping:
                 patience = st.number_input(
-                    "⏱️ Patience",
+                    "Patience",
                     min_value=1,
                     max_value=50,
                     value=3,
@@ -2132,7 +2183,7 @@ with tab2:
             gnn_num_layers = st.number_input(
                 "Number of GNN layers",
                 min_value=1,
-                max_value=20,
+                max_value=50,
                 value=3,
                 step=1,
                 key="gnn_num_layers",
@@ -2204,7 +2255,7 @@ with tab2:
                             "K Neighbors",
                             min_value=3,
                             max_value=50,
-                            value=7,
+                            value=5,
                             step=1,
                             key=f"gnn_{i}_k",
                             help="Number of nearest neighbors for edge construction"
@@ -2359,7 +2410,7 @@ with tab2:
             gnn_test_size = st.number_input(
                 "Test Size (per class)",
                 min_value=1000,
-                max_value=500000,
+                max_value=1000000,
                 value=1000,
                 step=10,
                 key="gnn_test_size",
@@ -2470,7 +2521,7 @@ with tab2:
         
         with col_add1:
             gnn_eval_metric = st.selectbox(
-                "📊 Evaluation Metric",
+                "Evaluation Metric",
                 options=["accuracy", "auc", "f1", "recall", "precision"],
                 index=1,
                 key="gnn_eval_metric"
@@ -2513,7 +2564,7 @@ with tab2:
                 "Number of particles per graph",
                 min_value=1,
                 max_value=100,
-                value=4,
+                value=9,
                 key="nodes_per_graph",
                 help="Number of particles in the graph"
             )
@@ -2832,7 +2883,7 @@ with tab2:
             tr_test_size = st.number_input(
                 "Test Size (per class)",
                 min_value=1000,
-                max_value=500000,
+                max_value=1000000,
                 value=1000,
                 step=10,
                 key="tr_test_size",
@@ -2997,10 +3048,10 @@ with tab2:
         
         with col_cloud1:
             particles_per_cloud = st.number_input(
-                "Number of particles per cloud",
+                "Number of particles per cloud (per event)",
                 min_value=1,
                 max_value=100,
-                value=4,
+                value=9,
                 key="particles_per_cloud",
                 help="Number of particles in each cloud"
             )

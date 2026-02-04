@@ -37,7 +37,6 @@ class MLP(nn.Module):
         - dense: Linear layer with optional activation
         - dropout: Dropout layer
         - batchnorm: Batch normalization
-        - flatten: Flatten layer
     """
     
     def __init__(self, input_dim: int, cfg: ModelConfig):

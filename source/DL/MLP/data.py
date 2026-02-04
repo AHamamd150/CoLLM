@@ -40,19 +40,18 @@ def stratified_split(X: np.ndarray, y: np.ndarray, test_ratio: float):
     class_0_idx = np.where(y == 0)[0]
     class_1_idx = np.where(y == 1)[0]
     
-    # Shuffle each class
+
     np.random.shuffle(class_0_idx)
     np.random.shuffle(class_1_idx)
     
-    # Calculate test size per class
+    
     n_test_0 = int(len(class_0_idx) * test_ratio)
     n_test_1 = int(len(class_1_idx) * test_ratio)
     
-    # Split indices
+    
     test_idx = np.concatenate([class_0_idx[:n_test_0], class_1_idx[:n_test_1]])
     train_idx = np.concatenate([class_0_idx[n_test_0:], class_1_idx[n_test_1:]])
     
-    # Shuffle
     np.random.shuffle(test_idx)
     np.random.shuffle(train_idx)
     
@@ -110,7 +109,7 @@ def load_data(cfg: DataConfig) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.n
     Returns:
         X_train, y_train, X_val, y_val, X_test, y_test, input_dim, scaler
     """
-    # Load CSVs
+    
     sig_cols, sig_data = load_csv(cfg.signal_path)
     bkg_cols, bkg_data = load_csv(cfg.background_path)
     
@@ -128,11 +127,11 @@ def load_data(cfg: DataConfig) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.n
     
     #print(f"Features ({len(features)}): {features}")
     
-    # Extract features
+    
     sig_x = sig_data[:, sig_idx]
     bkg_x = bkg_data[:, bkg_idx]
     
-    # Shuffle
+    
     np.random.shuffle(sig_x)
     np.random.shuffle(bkg_x)
     
@@ -149,7 +148,7 @@ def load_data(cfg: DataConfig) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.n
     X_test = np.vstack([sig_test, bkg_test])
     y_test = np.array([1]*len(sig_test) + [0]*len(bkg_test), dtype=np.int64)
     
-    # Split train into train/val (stratified)
+    
     X_train, X_val, y_train, y_val = stratified_split(
         X_train_full, y_train_full, test_ratio=cfg.val_ratio
     )

@@ -164,6 +164,12 @@ OUTPUT RULES:
 - No unnecessary boilerplate
 - State assumptions in comments if analysis choices are ambiguous
 
+GNN/TRANSFORMER CSV OUTPUT:
+- Each ROW must represent ONE PARTICLE (not one event)
+- Columns must ONLY be feature names (e.g., pt, eta, phi, mass) — no particle prefixes
+- Loop over ALL events and write particles for EVERY event that passes selection cuts
+- Do NOT flatten all particles into a single row per event
+
 ================================================================================
 DEFAULT LHCO PARSER (always include this, MUST include read_lhco() function):
 ================================================================================

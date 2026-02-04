@@ -28,7 +28,7 @@ def main():
     
     # Load config
     print("=" * 40)
-    print("MLP CLASSIFIER")
+    print("MLP Classifier")
     print("=" * 40)
     print(f"Config: {args.config}")
     cfg = load_config(args.config)
@@ -42,7 +42,7 @@ def main():
     
     # Load data
     print("\n" + "=" * 40)
-    print("DATA")
+    print("Data")
     print("=" * 40)
     X_train, y_train, X_val, y_val, X_test, y_test, input_dim, scaler = load_data(cfg.data)
     
@@ -53,20 +53,20 @@ def main():
     )
     
     # Build model
-    print("\n" + "=" * 70)
-    print("MODEL")
-    print("=" * 70)
+    print("\n" + "=" * 40)
+    print("Model")
+    print("=" * 40)
     model = build_model(input_dim, cfg.model).to(device)
     
     # Train
     print("\n" + "=" * 70)
-    print("TRAINING")
+    print("Training")
     print("=" * 70)
     history = train(model, train_loader, val_loader, cfg.train, device)
     
     # Test
     print("\n" + "=" * 70)
-    print("TEST RESULTS")
+    print("Test Results")
     print("=" * 70)
     test_metrics = evaluate(model, test_loader, torch.nn.CrossEntropyLoss(), device)
     
@@ -77,7 +77,7 @@ def main():
     print(f"  Recall:    {test_metrics['recall']:.4f}")
     print(f"  F1:        {test_metrics['f1']:.4f}")
     
-    # Save results
+
     os.makedirs(cfg.output_dir, exist_ok=True)
     
     # Save model

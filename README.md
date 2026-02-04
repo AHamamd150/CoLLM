@@ -2,7 +2,7 @@
 
 # CoLLM
 
-### Collider LLM — End-to-End Deep Learning Toolbox for HEP Analysis
+### Collider LLM — End-to-End Deep Learning Toolbox for Collider Analysis
 
 <img src="logo/logo.png" alt="CoLLM Logo" width="150"/>
 
@@ -10,9 +10,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
 
-*LLM-powered analysis code generation for LHCO data with integrated deep learning pipelines*
+*LLM  analysis code generation for LHCO data with integrated deep learning pipelines*
 
 </div>
+
+---
+
+## Table of Contents
+- [Overview](#overview)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Project Structure](#project-structure)
+- [Supported LLM Models](#supported-llm-models)
+- [Examples](#examples)
 
 ---
 
@@ -21,26 +31,44 @@
 CoLLM automates collider physics analysis by using Large Language Models to generate executable Python scripts from natural language descriptions.
 
 <p align="center">
-  <img src="logo/workflow.jpg" alt="Workflow" width="900"/>
+  <img src="logo/workflowv2.png" alt="Workflow" width="900"/>
 </p>
 
 ---
+##  Installation
 
-## Installation
+#### Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/CoLLM.git
+git clone  https://github.com/AHamamd150/CoLLM.git
 cd CoLLM
+```
+
+#### Step 2: Create a Conda Environment
+
+```bash
+# Create a new conda environment with Python 3.11
+conda create -n collm python=3.11 
+
+# Activate the environment
+conda activate collm
+
+# Activate the run file
+cd CoLLM-main
 chmod +x run.sh
 ```
 
-Dependencies are installed automatically on first run.
+#### Step 3: Install Dependencies
+
+CoLLM automatically check and installs required dependencies on first run via the pip command. You don't have to install any package by yourself. 
+
+> **Note:** CoLLM may requires NumPy < 2.0 for compatibility. The package manager will handle this automatically.
 
 ---
 
 ## Usage
 
-### Command Line Options
+#### Command Line Options
 
 ```bash
 ./run.sh [MODE] [OPTIONS]
@@ -52,6 +80,7 @@ Dependencies are installed automatically on first run.
 | `--run_GUI` | Streamlit web interface | No |
 | `--run_MLP` | Train MLP classifier | Yes |
 | `--run_GNN` | Train GNN classifier | Yes |
+| `--run_Transformer` | Train Transformer classifier | Yes |
 
 | Option | Description |
 |--------|-------------|
@@ -60,19 +89,19 @@ Dependencies are installed automatically on first run.
 
 ---
 
-## Mode 1: TUI (Terminal User Interface)
+### Mode 1: TUI (Terminal User Interface)
 
 Generate analysis code from natural language via command line.
 
 ```bash
-./run.sh --run_TUI --input user_input_TUI.yml
+./run.sh --run_TUI --input templates/user_input_TUI.yml
 ```
 
-### TUI Configuration (`user_input_TUI.yml`)
+#### TUI Configuration (`user_input_TUI.yml`)
 
 ```yaml
 Output_dir: "./output/"
-DEFAULT_MODEL: "Qwen/Qwen2.5-Coder-14B-Instruct"
+DEFAULT_MODEL: "Qwen/Qwen2.5-Coder-14B-Instruct" #meta-llama/Llama-3.3-70B-Instruct LLM is recommended but it needs an API
 MAX_RETRIES: 3
 Input_file: "./data/signal.lhco"
 User_input: "./templates/user_input.txt"
@@ -90,7 +119,7 @@ Api_key: "your_huggingface_api_key"
 | `Use_api` | `True` for HF Inference API, `False` for local |
 | `Api_key` | HuggingFace API token (required if `Use_api: True`) |
 
-### User Input Format (`user_input.txt`)
+#### User Input Format (`user_input.txt`)
 
 ```
 [SELECTION_CUTS]
@@ -106,12 +135,13 @@ Api_key: "your_huggingface_api_key"
 - Normalize all histograms to unity
 
 [OUTPUT_STRUCTURE]
-- Print cutflow with event counts after each selection
+- Save the histograms in png format
+- Print cutflow with event counts
 ```
 
 ---
 
-## Mode 2: GUI (Graphical User Interface)
+### Mode 2: GUI (Graphical User Interface)
 
 Launch the Streamlit web interface for interactive configuration.
 
@@ -126,29 +156,25 @@ Opens browser at `http://localhost:8501` with:
 
 ---
 
-## Mode 3: MLP Training
+### Mode 3: MLP Training
 
 Train a Multi-Layer Perceptron classifier on tabular data.
 
 ```bash
-./run.sh --run_MLP --input config.yaml
+./run.sh --run_MLP --input templates/config.yaml
 ```
-
-Executes: `python -m source.DL.MLP.main_mlp --config <config_file>`
 
 ---
 
-## Mode 4: GNN Training
+### Mode 4: GNN Training
 
 Train Graph Neural Network classifiers (GCN, GAT, EdgeConv).
 
 ```bash
-./run.sh --run_GNN --input gnn_config.yaml
+./run.sh --run_GNN --input templates/gnn_config.yaml
 ```
 
-Executes: `python -m source.DL.main_gnn --config <config_file>`
-
-### GNN Configuration Example
+#### GNN Configuration Example
 
 ```yaml
 model:
@@ -172,6 +198,35 @@ train:
   device: auto                 # auto, cpu, cuda
 ```
 
+### Mode 5: Transformer Training
+
+Train Transformer classifier on particle cloud dataset.
+
+```bash
+./run.sh --run_Transformer --input templates/transformer_config.yaml
+```
+
+#### Transformer Configuration Example
+
+```yaml
+model:
+  embed_dim: 128                # embedding dimension
+  num_heads: 8                 # number of attention heads
+  num_layers: 4                # number of transformer layers
+  ffn_dim: 256                  # feed-forward network dimension
+  dropout: 0.1                 # dropout rate
+  attention_dropout: 0.1       # attention dropout rate
+  pooling: mean                  # pooling method: mean, max, attention
+  num_classes: 2                # number of output classes
+  pre_norm: true               # use pre-normalization
+
+train:
+  epochs: 100
+  batch_size: 32
+  learning_rate: 0.001
+  device: auto                 # auto, cpu, cuda
+```
+
 ---
 
 ## Project Structure
@@ -179,11 +234,14 @@ train:
 ```
 CoLLM/
 ├── run.sh                     # Main entry point
-├── user_input_TUI.yml         # TUI configuration
-├── config.yaml                # MLP configuration
-├── data/                      # Sample LHCO files
-├── output/                    # Generated outputs
-├── templates/                 # User input examples
+├── data/                      # Sample LHCO and CSV data files
+├── examples_user_input/       # User input examples (user_input_1-5.txt)
+├── logo/                      # Project logo and workflow images
+├── templates/                 # Configuration templates
+│   ├── user_input_TUI.yml     # TUI configuration
+│   ├── mlp_config.yaml        # MLP configuration
+│   ├── config_transformer.yaml # Transformer configuration
+│   └── config_example_*.yaml  # GNN configurations (GCN/GAT/EdgeConv)
 └── source/
     ├── LLM/
     │   ├── collm_lhco.py      # LLM orchestrator
@@ -201,32 +259,20 @@ CoLLM/
 
 ---
 
-## LHCO Data Format
 
-```
-#  typ   eta    phi     pt   jmas  ntrk  btag  had/em
-0           0      0                              # Event header
-1    2  -2.26   0.36  54.70  0.11  -1.0   6.0  57.13  # Muon
-2    4  -1.34   3.02  85.41 14.89  11.0   0.0   2.51  # Jet
-```
-
-| Type | Object |
-|------|--------|
-| 1 | Electron |
-| 2 | Muon |
-| 3 | Tau |
-| 4 | Jet |
-| 6 | Missing ET |
-
----
 
 ## Supported LLM Models
 
-| Model | Notes |
-|-------|-------|
-| `Qwen/Qwen2.5-Coder-14B-Instruct` | Recommended |
-| `meta-llama/Llama-3.3-70B-Instruct` | API only |
-| `codellama/CodeLlama-34b-Instruct-hf` | Local/API |
+| Model | Params | Category | Focus | Key features | Memory [GB] | 
+|-------|-------|-----------|-------|--------------|--------------|
+|`Qwen2.5-Coder-3B`| 3B  | Coder | Code gen. | High speed, low footprint | 6-8 |
+|`Llama-3.2-3B`    | 3B  | General | General | Lightweight, stable       | 6-8 | 
+|`Qwen2.5-Coder-7B`| 7B  | Coder | Code gen. | Balanced performance      | 14-16 |
+|`Qwen2.5-Coder-32B`|32B | Coder | Code gen. | High precision            | 60-70 |
+|`Qwen3-Coder-30B`|30B | Coder | Code gen. | Scalable performance        |55-65 |
+|`Llama-3.3-70B`|70B | General | General | Long range coherence        |130-150 |
+|`Qwen2.5-72B`|72B | General | Analysis  | Strong analytical capability | 135-155 |
+|`DeepSeek-R1-32B`|32B | Reasoning | Analysis  | Multi-step inference   | 60-70  |
 
 Local inference supports:
 - 4-bit quantization (CUDA with bitsandbytes)
@@ -239,23 +285,20 @@ Local inference supports:
 
 ```bash
 # Generate analysis code via TUI
-./run.sh --run_TUI --input user_input_TUI.yml
+./run.sh --run_TUI --input templates/user_input_TUI.yml
 
 # Launch web interface
 ./run.sh --run_GUI
 
 # Train MLP on signal/background data
-./run.sh --run_MLP --input config.yaml
+./run.sh --run_MLP --input templates/mlp_config.yaml
 
 # Train GNN classifier
-./run.sh --run_GNN --input templates/input_config_gnn_gat.yml
+./run.sh --run_GNN --input templates/config_example_gcn.yaml
+
+# Train Transformer classifier
+./run.sh --run_Transformer --input templates/config_transformer.yaml
 
 # Show help
 ./run.sh --help
 ```
-
----
-
-## License
-
-MIT License

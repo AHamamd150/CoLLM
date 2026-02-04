@@ -64,13 +64,14 @@ def ensure_packages():
         "tqdm":                  "tqdm",
         "yaml":                  "pyyaml",
         
-        # LangChain / LLM stack
-        "langchain":             "langchain",
-        "langchain_huggingface": "langchain-huggingface",
-        "transformers":          "transformers",
-        "huggingface_hub":       "huggingface-hub",
-        "accelerate":            "accelerate",
-        "pydantic":              "pydantic",
+        # LangChain / LLM stack (pinned for compatibility)
+        # IMPORTANT: huggingface-hub must be <1.0.0 for langchain-huggingface
+        "huggingface_hub":       "huggingface-hub>=0.33.4,<1.0.0",
+        "transformers":          "transformers>=4.45.0,<4.52.0",
+        "accelerate":            "accelerate>=0.26.0,<1.0.0",
+        "langchain":             "langchain>=0.3.0",
+        "langchain_huggingface": "langchain-huggingface>=0.1.0,<1.3.0",
+        "pydantic":              "pydantic>=2.0.0",
         
         # UI
         "streamlit":             "streamlit",
@@ -82,19 +83,50 @@ def ensure_packages():
     
     # Install regular packages first
     for module, pip_name in packages.items():
-        try:
-            __import__(module)
-            logger.info(f"{module} already installed")
-        except ImportError:
-            logger.warning(f"Installing {pip_name}...")
+        # Check if package has version constraints
+        has_version_constraint = any(c in pip_name for c in ['<', '>', '=', '!'])
+        
+        if has_version_constraint:
+            # For packages with version constraints, always run pip install with --force-reinstall
+            # This ensures the correct version is installed even if an incompatible version exists
+            logger.info(f"Installing/checking {pip_name}...")
             try:
-                subprocess.check_call([
-                    sys.executable, "-m", "pip", "install", pip_name
-                ], stdout=subprocess.DEVNULL)
-                logger.info(f"Successfully installed {pip_name}")
+                # First try without force to see if already satisfied
+                result = subprocess.run(
+                    [sys.executable, "-m", "pip", "install", pip_name],
+                    capture_output=True, text=True
+                )
+                output = result.stdout.lower() + result.stderr.lower()
+                
+                if "already satisfied" in output and "incompatible" not in output:
+                    logger.info(f"{module} already installed with compatible version")
+                elif result.returncode == 0:
+                    logger.info(f"Successfully installed {pip_name}")
+                else:
+                    # If regular install fails, try force reinstall
+                    logger.warning(f"Forcing reinstall of {pip_name}...")
+                    subprocess.check_call([
+                        sys.executable, "-m", "pip", "install", pip_name, "--force-reinstall"
+                    ], stdout=subprocess.DEVNULL)
+                    logger.info(f"Successfully reinstalled {pip_name}")
             except subprocess.CalledProcessError as e:
                 logger.error(f"Failed to install {pip_name}: {e}")
                 raise
+        else:
+            # For packages without version constraints, just check if importable
+            try:
+                __import__(module)
+                logger.info(f"{module} already installed")
+            except ImportError:
+                logger.warning(f"Installing {pip_name}...")
+                try:
+                    subprocess.check_call([
+                        sys.executable, "-m", "pip", "install", pip_name
+                    ], stdout=subprocess.DEVNULL)
+                    logger.info(f"Successfully installed {pip_name}")
+                except subprocess.CalledProcessError as e:
+                    logger.error(f"Failed to install {pip_name}: {e}")
+                    raise
     
     # Handle PyTorch separately for MPS support
     _ensure_pytorch()

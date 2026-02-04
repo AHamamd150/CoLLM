@@ -11,8 +11,8 @@ output_dir: "output"
 data:
   signal_path: "data/signal_mlp.csv"
   background_path: "data/bkg_mlp.csv"
-  train_size: 100000          # samples per class for training
-  test_size: 20000            # samples per class for testing
+  train_size: 1000          # samples per class for training
+  test_size: 1000            # samples per class for testing
   val_ratio: 0.15             # fraction of training data for validation
   normalize: true             # normalize features with StandardScaler
 
