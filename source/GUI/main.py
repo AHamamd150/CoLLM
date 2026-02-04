@@ -1527,7 +1527,7 @@ with tab1:
         
         api_key = st.text_input(
             "API Key",
-            value="Enter your API key",
+            value="",
             type="password",
             help="Your Hugging Face API key (required if using API)",
             disabled=not use_api
