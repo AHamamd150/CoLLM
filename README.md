@@ -245,7 +245,7 @@ CoLLM/
 └── source/
     ├── LLM/
     │   ├── collm_lhco.py      # LLM orchestrator
-    │   └── pyfixer.py         # Code validation
+    │   └── pyfixer.py         # Code autofix
     ├── DL/
     │   ├── MLP/               # MLP classifier
     │   ├── GNN/               # GNN models (GCN/GAT/EdgeConv)
