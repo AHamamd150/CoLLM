@@ -30,7 +30,7 @@
 - Normalize all histograms to unity (density=True).
 
 [OUTPUT_STRUCTURE]
-- Print cutflow showing number of events after each selection
+- Print event yields after all selection
 - Save the pltos in png format
 - Save the following in a CSV file for MLP analysis:
   1- Transverse mass of lepton + MET
