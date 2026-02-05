@@ -25,5 +25,5 @@
 10 Plot eta of the W candidate lepton
 
 [OUTPUT_STRUCTURE]
-- Print event yields at each selection stage
+- Print event yields after all selection
 - save the plots in png format with dpi = 150
