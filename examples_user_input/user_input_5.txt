@@ -28,5 +28,5 @@
 
 
 [OUTPUT_STRUCTURE]
-- Print detailed cutflow showing efficiency of each cut
+- Print event yields after all selection
 - Save the plots in png format
