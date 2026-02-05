@@ -27,7 +27,7 @@
 - Write axis labels in LaTeX (e.g., $m_{\gamma\gamma}$, $p_T^{\gamma}$).
 
 [OUTPUT_STRUCTURE]
-- Print cutflow with event counts at each stage
+- Print event yields after all selection
 - save the figures in png format
 - Save to CSV for MLP analysis:
   1- Diphoton invariant mass
