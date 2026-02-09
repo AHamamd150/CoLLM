@@ -312,15 +312,13 @@ Local inference supports:
 If you use CoLLM in your research, please cite our paper:
 
 ```bibtex
-@article{esmail2025collm,
-    title     = {CoLLM: AI engineering toolbox for end-to-end deep learning in collider analyses},
-    author    = {Esmail, W. and Hammad, A. and Nojiri, M.},
-    journal   = {arXiv preprint arXiv:XXXX.XXXXX},
-    year      = {2025},
-    eprint    = {XXXX.XXXXX},
-    archivePrefix = {arXiv},
-    primaryClass  = {hep-ph}
+@article{Esmail:2026jpb,
+    author = "Esmail, W. and Hammad, A. and Nojiri, M.",
+    title = "{CoLLM: AI engineering toolbox for end-to-end deep learning in collider analyses}",
+    eprint = "2602.06496",
+    archivePrefix = "arXiv",
+    primaryClass = "hep-ph",
+    month = "2",
+    year = "2026"
 }
 ```
-
-**Paper:** [arXiv:XXXX.XXXXX](https://arxiv.org/abs/XXXX.XXXXX) *(link will be updated upon publication)*
