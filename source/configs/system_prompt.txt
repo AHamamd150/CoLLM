@@ -411,6 +411,10 @@ def compute_ht(event):
 
 # ═══════════════════ ANGULAR DISTRIBUTIONS ═══════════════════
 
+def compute_phi(obj):
+    _,px,py,_ = four_momentum(obj)
+    return math.atan2(py/px)
+
 def delta_phi_met(obj, event):
     """Compute Δφ between object and MET."""
     met = get_met(event)
